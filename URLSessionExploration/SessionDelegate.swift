@@ -103,16 +103,34 @@ extension SessionDelegate: URLSessionTaskDelegate {
     // Task finished transferring data or had a client error.
     func urlSession(_ session: URLSession, task: URLSessionTask, didCompleteWithError error: Error?) {
         NSLog("URLSession: \(session), task: \(task), didCompleteWithError: \(error?.localizedDescription ?? "None")")
-        complete(task: task, withData: responseDatas[task], error: error)
+        
+        guard let retrier = manager?.retrier, let taskError = error, let manager = manager, let request = requests[task] else {
+            complete(task: task, withData: responseDatas[task], error: error)
+            return
+        }
+        
+        retrier.should(manager, retry: request, with: taskError) { (shouldRetry, interval) in
+            
+        }
     }
     
     // Only used when background sessions are resuming a delayed task.
     //    func urlSession(_ session: URLSession, task: URLSessionTask, willBeginDelayedRequest request: URLRequest, completionHandler: @escaping (URLSession.DelayedRequestDisposition, URLRequest?) -> Void) {
     //
     //    }
+    
+    // This method is called if the waitsForConnectivity property of URLSessionConfiguration is true, and sufficient
+    // connectivity is unavailable. The delegate can use this opportunity to update the user interface; for example, by
+    // presenting an offline mode or a cellular-only mode.
+    //
+    // This method is called, at most, once per task, and only if connectivity is initially unavailable. It is never
+    // called for background sessions because waitsForConnectivity is ignored for those sessions.
     @available(macOS 10.13, iOS 11.0, *)
     func urlSession(_ session: URLSession, taskIsWaitingForConnectivity task: URLSessionTask) {
         NSLog("URLSession: \(session), taskIsWaitingForConnectivity: \(task)")
+        // Post Notification?
+        // Update Request state?
+        // Only once? How to know when it's done waiting and resumes the task?
     }
 }
 
@@ -139,6 +157,7 @@ extension SessionDelegate: URLSessionDataDelegate {
     func urlSession(_ session: URLSession, dataTask: URLSessionDataTask, didReceive data: Data) {
         NSLog("URLSession: \(session), dataTask: \(dataTask), didReceiveDataOfLength: \(data.count)")
         responseDatas[dataTask]?.append(data)
+        // Update Request progress?
     }
     
     //    The session calls this delegate method after the task finishes receiving all of the expected data. If you do not implement this method, the default behavior is to use the caching policy specified in the session’s configuration object. The primary purpose of this method is to prevent caching of specific URLs or to modify the userInfo dictionary associated with the URL response.

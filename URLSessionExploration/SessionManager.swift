@@ -21,7 +21,12 @@ class SessionManager {
     
     private let session: URLSession
     
-    init(configuration: URLSessionConfiguration = .default, delegate: SessionDelegate = SessionDelegate(), rootQueue: DispatchQueue = DispatchQueue(label: "com.alamofire.sessionManager"), requestAdapter: RequestAdapter? = nil, trustManager: ServerTrustManager? = nil, requestRetrier: RequestRetrier? = nil) {
+    init(configuration: URLSessionConfiguration = .default,
+         delegate: SessionDelegate = SessionDelegate(),
+         rootQueue: DispatchQueue = DispatchQueue(label: "com.alamofire.sessionManager"),
+         requestAdapter: RequestAdapter? = nil,
+         trustManager: ServerTrustManager? = nil,
+         requestRetrier: RequestRetrier? = nil) {
         self.configuration = configuration
         self.delegate = delegate
         self.rootQueue = rootQueue
@@ -51,10 +56,16 @@ class SessionManager {
         
         return request
     }
+    
+    
 }
 
 extension OperationQueue {
-    convenience init(qualityOfService: QualityOfService = .default, maxConcurrentOperationCount: Int = OperationQueue.defaultMaxConcurrentOperationCount, underlyingQueue: DispatchQueue? = nil, name: String? = nil, startSuspended: Bool = false) {
+    convenience init(qualityOfService: QualityOfService = .default,
+                     maxConcurrentOperationCount: Int = OperationQueue.defaultMaxConcurrentOperationCount,
+                     underlyingQueue: DispatchQueue? = nil,
+                     name: String? = nil,
+                     startSuspended: Bool = false) {
         self.init()
         self.qualityOfService = qualityOfService
         self.maxConcurrentOperationCount = maxConcurrentOperationCount
