@@ -8,7 +8,8 @@
 
 import Foundation
 
-typealias RequestCompletionHandler = (_ result: Result<Data?>) -> Void
+typealias DataRequestCompletionHandler = (_ result: Result<Data?>) -> Void
+typealias DownloadRequestCompletionHandler = (_ result: Result<URL?>) -> Void
 
 class Request {
     enum State {
@@ -16,11 +17,10 @@ class Request {
     }
     
     private var state: State = .initialized
-    private let queue: OperationQueue
+    let queue: OperationQueue
     
     private(set) var request: URLRequest?
-    private(set) var error: Error?
-    private(set) var data: Data?
+    var error: Error?
     
     init(underlyingQueue: DispatchQueue) {
         queue = OperationQueue(maxConcurrentOperationCount: 1, underlyingQueue: underlyingQueue, name: "com.alamofire.request", startSuspended: true)
@@ -36,6 +36,15 @@ class Request {
         finish()
     }
     
+    func finish() {
+        state = .finished
+        queue.isSuspended = false
+    }
+}
+
+class DataRequest: Request {
+    private(set) var data: Data?
+    
     func didComplete(with data: Data?, error: Error?) {
         self.data = data
         self.error = self.error ?? error
@@ -43,19 +52,36 @@ class Request {
         finish()
     }
     
-    func finish() {
-        state = .finished
-        queue.isSuspended = false
-    }
-    
     @discardableResult
-    func response(queue: DispatchQueue? = nil, completionHandler: @escaping RequestCompletionHandler) -> Self {
+    func response(queue: DispatchQueue? = nil, completionHandler: @escaping DataRequestCompletionHandler) -> Self {
         self.queue.addOperation {
             (queue ?? .main).async {
                 completionHandler(Result(value: self.data, error: self.error))
             }
         }
+        
+        return self
+    }
+}
 
+class DownloadRequest: Request {
+    private(set) var url: URL?
+    
+    func didComplete(with url: URL) {
+        self.url = url
+        self.error = self.error ?? error
+        
+        finish()
+    }
+    
+    @discardableResult
+    func response(queue: DispatchQueue? = nil, completionHandler: @escaping DownloadRequestCompletionHandler) -> Self {
+        self.queue.addOperation {
+            (queue ?? .main).async {
+                completionHandler(Result(value: self.url, error: self.error))
+            }
+        }
+        
         return self
     }
 }

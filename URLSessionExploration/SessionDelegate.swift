@@ -25,7 +25,16 @@ class SessionDelegate: NSObject {
     }
     
     func complete(task: URLSessionTask, withData data: Data?, error: Error?) {
-        requests[task]?.didComplete(with: responseDatas[task], error: error)
+        guard let request = requests[task] as? DataRequest else {
+            NSLog("Tried to finish a request but it wasn't a data request.")
+            return
+        }
+        
+        request.didComplete(with: responseDatas[task], error: error)
+        cleanup(task: task)
+    }
+    
+    func cleanup(task: URLSessionTask) {
         requests.removeValue(forKey: task)
         responseDatas.removeValue(forKey: task)
     }
@@ -96,6 +105,7 @@ extension SessionDelegate: URLSessionTaskDelegate {
         completionHandler(request)
     }
     
+    @available(macOS 10.12, iOS 10.0, *)
     func urlSession(_ session: URLSession, task: URLSessionTask, didFinishCollecting metrics: URLSessionTaskMetrics) {
         NSLog("URLSession: \(session), task: \(task), didFinishCollecting: \(metrics)")
     }
@@ -197,7 +207,21 @@ extension SessionDelegate: URLSessionDownloadDelegate {
     }
     
     // When finished, open for reading or move the file.
+    // A file URL for the temporary file. Because the file is temporary, you must either open the file for reading or
+    // move it to a permanent location in your app’s sandbox container directory before returning from this delegate
+    // method.
+    //
+    // If you choose to open the file for reading, you should do the actual reading in another thread to avoid blocking
+    // the delegate queue.
     func urlSession(_ session: URLSession, downloadTask: URLSessionDownloadTask, didFinishDownloadingTo location: URL) {
         NSLog("URLSession: \(session), downloadTask: \(downloadTask), didFinishDownloadingTo: \(location)")
+        
+        guard let request = requests[downloadTask] as? DownloadRequest else {
+            NSLog("download finished but either no request found or request wasn't DownloadRequest")
+            return
+        }
+        
+        request.didComplete(with: location)
+        cleanup(task: downloadTask)
     }
 }

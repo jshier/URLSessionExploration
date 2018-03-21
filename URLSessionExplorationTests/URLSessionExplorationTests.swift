@@ -132,4 +132,22 @@ class URLSessionExplorationTests: XCTestCase {
         XCTAssertTrue(requestResult?.isSuccess == true)
     }
     
+    func testDownload() {
+        // Given
+        let manager = SessionManager()
+        let urlString = "https://httpbin.org/bytes/\(1024 * 1024)"
+        let expect = expectation(description: "download should finish")
+        var requestResult: Result<URL?>?
+        
+        // When
+        manager.download(urlString).response { result in
+            requestResult = result
+            expect.fulfill()
+        }
+        waitForExpectations(timeout: 30, handler: nil)
+        
+        // Then
+        XCTAssertTrue(requestResult?.isSuccess == true)
+    }
+    
 }

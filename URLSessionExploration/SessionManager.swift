@@ -39,8 +39,8 @@ class SessionManager {
         delegate.didCreate(sessionManager: self)
     }
     
-    func request<Convertible: URLRequestConvertible>(_ convertible: Convertible) -> Request {
-        let request = Request(underlyingQueue: rootQueue)
+    func request<Convertible: URLRequestConvertible>(_ convertible: Convertible) -> DataRequest {
+        let request = DataRequest(underlyingQueue: rootQueue)
         
         requestQueue.async {
             do {
@@ -57,7 +57,23 @@ class SessionManager {
         return request
     }
     
-    
+    func download<Convertible: URLRequestConvertible>(_ convertible: Convertible) -> DownloadRequest {
+        let request = DownloadRequest(underlyingQueue: rootQueue)
+        
+        requestQueue.async {
+            do {
+                let initialRequest = try convertible.asURLRequest()
+                let adaptedRequest = try self.adapter?.adapt(initialRequest)
+                let urlRequest = adaptedRequest ?? initialRequest
+                let task = self.session.downloadTask(with: urlRequest)
+                self.delegate.didCreate(urlRequest: urlRequest, for: request, and: task)
+            } catch {
+                request.didFail(with: error)
+            }
+        }
+        
+        return request
+    }
 }
 
 extension OperationQueue {
