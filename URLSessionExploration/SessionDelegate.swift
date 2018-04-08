@@ -9,8 +9,9 @@
 import Foundation
 
 class SessionDelegate: NSObject {
-    private var requests: [URLSessionTask : Request] = [:]
-    private var responseDatas: [URLSessionTask : Data] = [:]
+    // TODO: Investigate queueing active tasks?
+    private(set) var requestTaskMap = RequestTaskMap()
+
     private weak var manager: SessionManager?
     
     func didCreate(sessionManager: SessionManager) {
@@ -18,25 +19,32 @@ class SessionDelegate: NSObject {
     }
     
     func didCreate(urlRequest: URLRequest, for request: Request, and task: URLSessionTask) {
-        requests[task] = request
-        responseDatas[task] = Data()
+        requestTaskMap[request] = task
+
         task.resume()
+        
         request.didStart(request: urlRequest)
     }
-    
-    func complete(task: URLSessionTask, withData data: Data?, error: Error?) {
-        guard let request = requests[task] as? DataRequest else {
-            NSLog("Tried to finish a request but it wasn't a data request.")
-            return
+}
+
+extension SessionDelegate: RequestDelegate {
+    func cancelRequest(_ request: Request) {
+        guard let task = requestTaskMap[request] else {
+            fatalError("Attempting to cancel a Request that has no associated task.")
         }
         
-        request.didComplete(with: responseDatas[task], error: error)
-        cleanup(task: task)
+        // TODO: Separate API for internal operations from methods called by the URLSessionDelegate methods.
+        requestTaskMap[task]?.error = AFError.explicitlyCancelled
+        task.cancel()
     }
     
-    func cleanup(task: URLSessionTask) {
-        requests.removeValue(forKey: task)
-        responseDatas.removeValue(forKey: task)
+    func suspendRequest(_ request: Request) {
+        requestTaskMap[request]?.suspend()
+    }
+    
+    func resumeRequest(_ request: Request) {
+        // TODO: If queue, move manually resumed requests to the top.
+        requestTaskMap[request]?.resume()
     }
 }
 
@@ -76,7 +84,7 @@ extension SessionDelegate: URLSessionTaskDelegate {
         }
         
         guard evaluator.evaluate(serverTrust, forHost: host) else {
-            requests[task]?.didFail(with: AFError.certificatePinningFailed(reason: .evaluationFailed))
+            requestTaskMap[task]?.didFail(with: AFError.certificatePinningFailed(reason: .evaluationFailed))
             completionHandler(.cancelAuthenticationChallenge, nil)
             return
         }
@@ -114,14 +122,23 @@ extension SessionDelegate: URLSessionTaskDelegate {
     func urlSession(_ session: URLSession, task: URLSessionTask, didCompleteWithError error: Error?) {
         NSLog("URLSession: \(session), task: \(task), didCompleteWithError: \(error?.localizedDescription ?? "None")")
         
-        guard let retrier = manager?.retrier, let taskError = error, let manager = manager, let request = requests[task] else {
-            complete(task: task, withData: responseDatas[task], error: error)
-            return
+        // TODO: Need to differentiate between Request types?
+        if let error = error {
+            requestTaskMap[task]?.didFail(with: error)
+        } else {
+            requestTaskMap[task]?.didComplete()
         }
         
-        retrier.should(manager, retry: request, with: taskError) { (shouldRetry, interval) in
-            
-        }
+        requestTaskMap[task] = nil
+        
+//        guard let retrier = manager?.retrier, let taskError = error, let manager = manager, let request = requests[task] else {
+//            complete(task: task, withData: responseDatas[task], error: error)
+//            return
+//        }
+//
+//        retrier.should(manager, retry: request, with: taskError) { (shouldRetry, interval) in
+//
+//        }
     }
     
     // Only used when background sessions are resuming a delayed task.
@@ -166,7 +183,11 @@ extension SessionDelegate: URLSessionDataDelegate {
     // Called, possibly more than once, to accumulate the data for a response.
     func urlSession(_ session: URLSession, dataTask: URLSessionDataTask, didReceive data: Data) {
         NSLog("URLSession: \(session), dataTask: \(dataTask), didReceiveDataOfLength: \(data.count)")
-        responseDatas[dataTask]?.append(data)
+        guard let request = requestTaskMap[dataTask] as? DataRequest else {
+            fatalError("dataTask received data for incorrect Request subclass: \(String(describing: requestTaskMap[dataTask]))")
+        }
+        
+        request.didRecieve(data: data)
         // Update Request progress?
     }
     
@@ -216,12 +237,10 @@ extension SessionDelegate: URLSessionDownloadDelegate {
     func urlSession(_ session: URLSession, downloadTask: URLSessionDownloadTask, didFinishDownloadingTo location: URL) {
         NSLog("URLSession: \(session), downloadTask: \(downloadTask), didFinishDownloadingTo: \(location)")
         
-        guard let request = requests[downloadTask] as? DownloadRequest else {
-            NSLog("download finished but either no request found or request wasn't DownloadRequest")
-            return
+        guard let request = requestTaskMap[downloadTask] as? DownloadRequest else {
+            fatalError("download finished but either no request found or request wasn't DownloadRequest")
         }
         
         request.didComplete(with: location)
-        cleanup(task: downloadTask)
     }
 }

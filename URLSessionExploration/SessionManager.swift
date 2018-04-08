@@ -40,7 +40,7 @@ class SessionManager {
     }
     
     func request<Convertible: URLRequestConvertible>(_ convertible: Convertible) -> DataRequest {
-        let request = DataRequest(underlyingQueue: rootQueue)
+        let request = DataRequest(underlyingQueue: rootQueue, delegate: delegate)
         
         requestQueue.async {
             do {
@@ -58,7 +58,7 @@ class SessionManager {
     }
     
     func download<Convertible: URLRequestConvertible>(_ convertible: Convertible) -> DownloadRequest {
-        let request = DownloadRequest(underlyingQueue: rootQueue)
+        let request = DownloadRequest(underlyingQueue: rootQueue, delegate: delegate)
         
         requestQueue.async {
             do {

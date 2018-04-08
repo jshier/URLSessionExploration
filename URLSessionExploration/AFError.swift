@@ -116,6 +116,7 @@ public enum AFError: Error {
         case evaluationFailed
     }
     
+    case explicitlyCancelled
     case invalidURL(url: URLConvertible)
     case parameterEncodingFailed(reason: ParameterEncodingFailureReason)
     case multipartEncodingFailed(reason: MultipartEncodingFailureReason)
@@ -137,6 +138,12 @@ extension Error {
 // MARK: - Error Booleans
 
 extension AFError {
+    /// Returns whether the AFError is an invalid URL error.
+    public var isExplictlyCancelledError: Bool {
+        if case .explicitlyCancelled = self { return true }
+        return false
+    }
+    
     /// Returns whether the AFError is an invalid URL error.
     public var isInvalidURLError: Bool {
         if case .invalidURL = self { return true }
@@ -341,6 +348,8 @@ extension AFError.ResponseSerializationFailureReason {
 extension AFError: LocalizedError {
     public var errorDescription: String? {
         switch self {
+        case .explicitlyCancelled:
+            return "Request explicitly cancelled by called .cancel()."
         case .invalidURL(let url):
             return "URL is not valid: \(url)"
         case .parameterEncodingFailed(let reason):

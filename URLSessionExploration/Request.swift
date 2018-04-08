@@ -8,22 +8,35 @@
 
 import Foundation
 
-typealias DataRequestCompletionHandler = (_ result: Result<Data?>) -> Void
+typealias DataRequestCompletionHandler = (_ result: Result<Data>) -> Void
 typealias DownloadRequestCompletionHandler = (_ result: Result<URL?>) -> Void
+
+protocol RequestDelegate: AnyObject {
+    func cancelRequest(_ request: Request)
+    func suspendRequest(_ request: Request)
+    func resumeRequest(_ request: Request)
+}
 
 class Request {
     enum State {
-        case initialized, performing, finished
+        case initialized, performing, suspended, finished
     }
     
-    private var state: State = .initialized
+    private(set) var state: State = .initialized
+    
+    let id: UUID
+    let underlyingQueue: DispatchQueue
     let queue: OperationQueue
+    private weak var delegate: RequestDelegate?
     
     private(set) var request: URLRequest?
     var error: Error?
     
-    init(underlyingQueue: DispatchQueue) {
+    init(id: UUID = UUID(), underlyingQueue: DispatchQueue, delegate: RequestDelegate) {
+        self.id = id
+        self.underlyingQueue = underlyingQueue
         queue = OperationQueue(maxConcurrentOperationCount: 1, underlyingQueue: underlyingQueue, name: "com.alamofire.request", startSuspended: true)
+        self.delegate = delegate
     }
     
     func didStart(request: URLRequest) {
@@ -32,7 +45,12 @@ class Request {
     }
     
     func didFail(with error: Error) {
-        self.error = error
+        // TODO: Investigate whether we want a different mechanism here.
+        self.error = self.error ?? error
+        finish()
+    }
+    
+    func didComplete() {
         finish()
     }
     
@@ -40,16 +58,38 @@ class Request {
         state = .finished
         queue.isSuspended = false
     }
+    
+    public func cancel() {
+        delegate?.cancelRequest(self)
+    }
+    
+    public func suspend() {
+        delegate?.suspendRequest(self)
+        state = .suspended
+    }
+    
+    public func resume() {
+        delegate?.resumeRequest(self)
+    }
+}
+
+extension Request: Equatable {
+    static func == (lhs: Request, rhs: Request) -> Bool {
+        return lhs.id == rhs.id
+    }
+}
+
+extension Request: Hashable {
+    var hashValue: Int {
+        return id.hashValue
+    }
 }
 
 class DataRequest: Request {
-    private(set) var data: Data?
+    private(set) var data = Data()
     
-    func didComplete(with data: Data?, error: Error?) {
-        self.data = data
-        self.error = self.error ?? error
-        
-        finish()
+    func didRecieve(data: Data) {
+        self.data.append(data)
     }
     
     @discardableResult
@@ -69,7 +109,6 @@ class DownloadRequest: Request {
     
     func didComplete(with url: URL) {
         self.url = url
-        self.error = self.error ?? error
         
         finish()
     }
