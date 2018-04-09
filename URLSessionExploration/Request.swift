@@ -35,29 +35,43 @@ class Request {
     init(id: UUID = UUID(), underlyingQueue: DispatchQueue, delegate: RequestDelegate) {
         self.id = id
         self.underlyingQueue = underlyingQueue
-        queue = OperationQueue(maxConcurrentOperationCount: 1, underlyingQueue: underlyingQueue, name: "com.alamofire.request", startSuspended: true)
+        queue = OperationQueue(maxConcurrentOperationCount: 1, underlyingQueue: underlyingQueue, name: "org.alamofire.request", startSuspended: true)
         self.delegate = delegate
     }
     
-    func didStart(request: URLRequest) {
+    // MARK: - Internal API
+    // Called from internal queue.
+    
+    func didCreate(request: URLRequest) {
         self.request = request
+    }
+    
+    func didResume() {
         state = .performing
+    }
+    
+    func didSuspend() {
+        state = .suspended
+    }
+    
+    func didCancel() {
+        error = AFError.explicitlyCancelled
     }
     
     func didFail(with error: Error) {
         // TODO: Investigate whether we want a different mechanism here.
         self.error = self.error ?? error
-        finish()
+        didComplete()
     }
     
     func didComplete() {
-        finish()
-    }
-    
-    func finish() {
         state = .finished
         queue.isSuspended = false
     }
+    
+    // MARK: - Public API
+    
+    // Callable from any queue.
     
     public func cancel() {
         delegate?.cancelRequest(self)
@@ -65,7 +79,6 @@ class Request {
     
     public func suspend() {
         delegate?.suspendRequest(self)
-        state = .suspended
     }
     
     public func resume() {
@@ -110,7 +123,7 @@ class DownloadRequest: Request {
     func didComplete(with url: URL) {
         self.url = url
         
-        finish()
+        didComplete()
     }
     
     @discardableResult
@@ -124,6 +137,14 @@ class DownloadRequest: Request {
         return self
     }
 }
+
+//class UploadRequest: Request {
+//    private(set) var data = Data()
+//    
+//    func didRecieve(data: Data) {
+//        self.data.append(data)
+//    }
+//}
 
 extension Result {
     init(value: Value, error: Error?) {

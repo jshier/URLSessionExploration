@@ -11,19 +11,19 @@ import Foundation
 class SessionManager {
     static let `default` = SessionManager()
     
-    private let configuration: URLSessionConfiguration
-    private let delegate: SessionDelegate
-    private let rootQueue: DispatchQueue
-    private let requestQueue: DispatchQueue
-    private let adapter: RequestAdapter?
+    let configuration: URLSessionConfiguration
+    let delegate: SessionDelegate
+    let rootQueue: DispatchQueue
+    let requestQueue: DispatchQueue
+    let adapter: RequestAdapter?
     let retrier: RequestRetrier?
     let trustManager: ServerTrustManager?
     
-    private let session: URLSession
+    let session: URLSession
     
     init(configuration: URLSessionConfiguration = .default,
          delegate: SessionDelegate = SessionDelegate(),
-         rootQueue: DispatchQueue = DispatchQueue(label: "com.alamofire.sessionManager"),
+         rootQueue: DispatchQueue = DispatchQueue(label: "org.alamofire.sessionManager"),
          requestAdapter: RequestAdapter? = nil,
          trustManager: ServerTrustManager? = nil,
          requestRetrier: RequestRetrier? = nil) {
@@ -34,7 +34,7 @@ class SessionManager {
         retrier = requestRetrier
         self.trustManager = trustManager
         requestQueue = DispatchQueue(label: "\(rootQueue.label).requestQueue", target: rootQueue)
-        let delegateQueue = OperationQueue(maxConcurrentOperationCount: 1, underlyingQueue: rootQueue, name: "com.alamofire.sessionManager.sessionDelegateQueue")
+        let delegateQueue = OperationQueue(maxConcurrentOperationCount: 1, underlyingQueue: rootQueue, name: "org.alamofire.sessionManager.sessionDelegateQueue")
         session = URLSession(configuration: configuration, delegate: delegate, delegateQueue: delegateQueue)
         delegate.didCreate(sessionManager: self)
     }
@@ -66,6 +66,42 @@ class SessionManager {
                 let adaptedRequest = try self.adapter?.adapt(initialRequest)
                 let urlRequest = adaptedRequest ?? initialRequest
                 let task = self.session.downloadTask(with: urlRequest)
+                self.delegate.didCreate(urlRequest: urlRequest, for: request, and: task)
+            } catch {
+                request.didFail(with: error)
+            }
+        }
+        
+        return request
+    }
+    
+    func upload<Convertible: URLRequestConvertible>(data: Data, with convertible: Convertible) -> DataRequest {
+        let request = DataRequest(underlyingQueue: rootQueue, delegate: delegate)
+        
+        requestQueue.async {
+            do {
+                let initialRequest = try convertible.asURLRequest()
+                let adaptedRequest = try self.adapter?.adapt(initialRequest)
+                let urlRequest = adaptedRequest ?? initialRequest
+                let task = self.session.uploadTask(with: urlRequest, from: data)
+                self.delegate.didCreate(urlRequest: urlRequest, for: request, and: task)
+            } catch {
+                request.didFail(with: error)
+            }
+        }
+        
+        return request
+    }
+    
+    func upload<Convertible: URLRequestConvertible>(file fileURL: URL, with convertible: Convertible) -> DataRequest {
+        let request = DataRequest(underlyingQueue: rootQueue, delegate: delegate)
+        
+        requestQueue.async {
+            do {
+                let initialRequest = try convertible.asURLRequest()
+                let adaptedRequest = try self.adapter?.adapt(initialRequest)
+                let urlRequest = adaptedRequest ?? initialRequest
+                let task = self.session.uploadTask(with: urlRequest, fromFile: fileURL)
                 self.delegate.didCreate(urlRequest: urlRequest, for: request, and: task)
             } catch {
                 request.didFail(with: error)

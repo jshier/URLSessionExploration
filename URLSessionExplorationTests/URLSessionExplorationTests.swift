@@ -216,13 +216,15 @@ class URLSessionExplorationTests: XCTestCase {
         
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
             request.suspend()
+        }
+        
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.35) {
             capturedState = request.state
         }
         
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
             request.resume()
         }
-        
         
         waitForExpectations(timeout: 30, handler: nil)
         
@@ -232,4 +234,82 @@ class URLSessionExplorationTests: XCTestCase {
         XCTAssertTrue(capturedState == .suspended)
     }
     
+    func testUploadRequest() {
+        // Given
+        let url = Bundle(for: URLSessionExplorationTests.self).url(forResource: "imac", withExtension: "jpg")!
+        let imageData = try! Data(contentsOf: url)
+        let manager = SessionManager()
+        let uploadable = Uploadable()
+        let expect = expectation(description: "upload should finish")
+        var requestResult: Result<Data>?
+        
+        // When
+        manager.upload(data: imageData, with: uploadable).response { (result) in
+            requestResult = result
+            expect.fulfill()
+        }
+        
+        waitForExpectations(timeout: 5, handler: nil)
+        
+        // Then
+        XCTAssertTrue(requestResult?.isSuccess == true)
+    }
+    
+    func testUploadFromFileRequest() {
+        // Given
+        let url = Bundle(for: URLSessionExplorationTests.self).url(forResource: "imac", withExtension: "jpg")!
+        let manager = SessionManager()
+        let uploadable = Uploadable()
+        let expect = expectation(description: "upload should finish")
+        var requestResult: Result<Data>?
+        
+        // When
+        manager.upload(file: url, with: uploadable).response { (result) in
+            requestResult = result
+            expect.fulfill()
+        }
+        
+        waitForExpectations(timeout: 5, handler: nil)
+        
+        // Then
+        XCTAssertTrue(requestResult?.isSuccess == true)
+    }
+    
+    func testNonUploadUploadRequest() {
+        // Given
+        let url = Bundle(for: URLSessionExplorationTests.self).url(forResource: "imac", withExtension: "jpg")!
+        let imageData = try! Data(contentsOf: url)
+        let manager = SessionManager()
+        let uploadable = Uploadable(imageData)
+        let expect = expectation(description: "upload should finish")
+        var requestResult: Result<Data>?
+        
+        // When
+        manager.request(uploadable).response { (result) in
+            requestResult = result
+            expect.fulfill()
+        }
+        
+        waitForExpectations(timeout: 5, handler: nil)
+        
+        // Then
+        XCTAssertTrue(requestResult?.isSuccess == true)
+    }
+}
+
+struct Uploadable: URLRequestConvertible {
+    let url = URL(string: "https://httpbin.org/anything")!
+    let data: Data?
+    
+    init(_ data: Data? = nil) {
+        self.data = data
+    }
+    
+    func asURLRequest() throws -> URLRequest {
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        request.httpBody = data
+        
+        return request
+    }
 }

@@ -12,44 +12,51 @@ class SessionDelegate: NSObject {
     // TODO: Investigate queueing active tasks?
     private(set) var requestTaskMap = RequestTaskMap()
 
+    // TODO: Better way to connect delegate to manager, including queue.
     private weak var manager: SessionManager?
     
     func didCreate(sessionManager: SessionManager) {
         manager = sessionManager
     }
     
+    // TODO: Separate task and request creation.
     func didCreate(urlRequest: URLRequest, for request: Request, and task: URLSessionTask) {
         requestTaskMap[request] = task
+        
+        request.didCreate(request: urlRequest)
 
         task.resume()
         
-        request.didStart(request: urlRequest)
+        request.didResume()
     }
 }
 
+// All delegate methods come from a random queue and need to be enqueued onto the internal queue.
 extension SessionDelegate: RequestDelegate {
     func cancelRequest(_ request: Request) {
-        guard let task = requestTaskMap[request] else {
-            fatalError("Attempting to cancel a Request that has no associated task.")
+        manager?.rootQueue.async {
+            self.requestTaskMap[request]?.cancel()
+            request.didCancel()
         }
-        
-        // TODO: Separate API for internal operations from methods called by the URLSessionDelegate methods.
-        requestTaskMap[task]?.error = AFError.explicitlyCancelled
-        task.cancel()
     }
     
     func suspendRequest(_ request: Request) {
-        requestTaskMap[request]?.suspend()
+        manager?.rootQueue.async {
+            self.requestTaskMap[request]?.suspend()
+            request.didSuspend()
+        }
     }
     
     func resumeRequest(_ request: Request) {
-        // TODO: If queue, move manually resumed requests to the top.
-        requestTaskMap[request]?.resume()
+        manager?.rootQueue.async {
+            // TODO: If queue, move manually resumed requests to the top.
+            self.requestTaskMap[request]?.resume()
+            request.didResume()
+        }
     }
 }
 
 extension SessionDelegate: URLSessionDelegate {
-    
     func urlSession(_ session: URLSession, didBecomeInvalidWithError error: Error?) {
         NSLog("URLSession: \(session), didBecomeInvalidWithError: \(error?.localizedDescription ?? "None")")
     }
