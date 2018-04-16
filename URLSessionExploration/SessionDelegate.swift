@@ -91,7 +91,8 @@ extension SessionDelegate: URLSessionTaskDelegate {
         }
         
         guard evaluator.evaluate(serverTrust, forHost: host) else {
-            requestTaskMap[task]?.didFail(with: AFError.certificatePinningFailed(reason: .evaluationFailed))
+            requestTaskMap[task]?.didFail(with: task,
+                                          error: AFError.certificatePinningFailed(reason: .evaluationFailed))
             completionHandler(.cancelAuthenticationChallenge, nil)
             return
         }
@@ -102,6 +103,9 @@ extension SessionDelegate: URLSessionTaskDelegate {
     // Progress of sending the body data.
     func urlSession(_ session: URLSession, task: URLSessionTask, didSendBodyData bytesSent: Int64, totalBytesSent: Int64, totalBytesExpectedToSend: Int64) {
         NSLog("URLSession: \(session), task: \(task), didSendBodyData: \(bytesSent), totalBytesSent: \(totalBytesSent), totalBytesExpectedToSent: \(totalBytesExpectedToSend)")
+        if #available(iOS 11.0, *) {
+            NSLog("URLSession: \(session), task: \(task), progress: \(task.progress)")
+        }
     }
     
     // This delegate method is called under two circumstances:
@@ -109,9 +113,15 @@ extension SessionDelegate: URLSessionTaskDelegate {
     //To provide a replacement request body stream if the task needs to resend a request that has a body stream because of an authentication challenge or other recoverable server error.
     // You do not need to implement this if your code provides the request body using a file URL or an NSData object.
     // Don't enable if streamed bodies aren't supported.
-    //    func urlSession(_ session: URLSession, task: URLSessionTask, needNewBodyStream completionHandler: @escaping (InputStream?) -> Void) {
-    //
-    //    }
+    func urlSession(_ session: URLSession, task: URLSessionTask, needNewBodyStream completionHandler: @escaping (InputStream?) -> Void) {
+        NSLog("URLSession: \(session), task: \(task), needNewBodyStream")
+        
+        guard let request = requestTaskMap[task] as? UploadRequest else {
+            fatalError("needNewBodyStream for request that isn't UploadRequest.")
+        }
+        
+        completionHandler(request.inputStream())
+    }
     
     // This method is called only for tasks in default and ephemeral sessions. Tasks in background sessions automatically follow redirects.
     // Only code should be customization closure?
@@ -131,9 +141,9 @@ extension SessionDelegate: URLSessionTaskDelegate {
         
         // TODO: Need to differentiate between Request types?
         if let error = error {
-            requestTaskMap[task]?.didFail(with: error)
+            requestTaskMap[task]?.didFail(with: task, error: error)
         } else {
-            requestTaskMap[task]?.didComplete()
+            requestTaskMap[task]?.didComplete(task: task)
         }
         
         requestTaskMap[task] = nil
@@ -173,19 +183,21 @@ extension SessionDelegate: URLSessionDataDelegate {
     // With that content type, the server sends a series of parts, each of which is intended to replace the previous part.
     // The session calls this method at the beginning of each part, and you should then display, discard, or otherwise process the previous part, as appropriate.
     // Don't support?
-    //    func urlSession(_ session: URLSession, dataTask: URLSessionDataTask, didReceive response: URLResponse, completionHandler: @escaping (URLSession.ResponseDisposition) -> Void) {
-    //
-    //    }
+//    func urlSession(_ session: URLSession, dataTask: URLSessionDataTask, didReceive response: URLResponse, completionHandler: @escaping (URLSession.ResponseDisposition) -> Void) {
+//        NSLog("URLSession: \(session), dataTask: \(dataTask), didReceive: \(response)")
+//
+//        completionHandler(.allow)
+//    }
     
     // Only called if didReceiveResponse is called.
-    //    func urlSession(_ session: URLSession, dataTask: URLSessionDataTask, didBecome downloadTask: URLSessionDownloadTask) {
-    //
-    //    }
+//    func urlSession(_ session: URLSession, dataTask: URLSessionDataTask, didBecome downloadTask: URLSessionDownloadTask) {
+//        NSLog("URLSession: \(session), dataTask: \(dataTask), didBecomeDownloadTask")
+//    }
     
     // Only called if didReceiveResponse is called.
-    //    func urlSession(_ session: URLSession, dataTask: URLSessionDataTask, didBecome streamTask: URLSessionStreamTask) {
-    //
-    //    }
+//    func urlSession(_ session: URLSession, dataTask: URLSessionDataTask, didBecome streamTask: URLSessionStreamTask) {
+//        NSLog("URLSession: \(session), dataTask: \(dataTask), didBecomeStreamTask: \(streamTask)")
+//    }
     
     // Called, possibly more than once, to accumulate the data for a response.
     func urlSession(_ session: URLSession, dataTask: URLSessionDataTask, didReceive data: Data) {
@@ -248,6 +260,6 @@ extension SessionDelegate: URLSessionDownloadDelegate {
             fatalError("download finished but either no request found or request wasn't DownloadRequest")
         }
         
-        request.didComplete(with: location)
+        request.didComplete(task: downloadTask, with: location)
     }
 }

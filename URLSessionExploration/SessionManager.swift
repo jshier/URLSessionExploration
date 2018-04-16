@@ -50,7 +50,7 @@ class SessionManager {
                 let task = self.session.dataTask(with: urlRequest)
                 self.delegate.didCreate(urlRequest: urlRequest, for: request, and: task)
             } catch {
-                request.didFail(with: error)
+                request.didFail(with: nil, error: error)
             }
         }
         
@@ -68,15 +68,15 @@ class SessionManager {
                 let task = self.session.downloadTask(with: urlRequest)
                 self.delegate.didCreate(urlRequest: urlRequest, for: request, and: task)
             } catch {
-                request.didFail(with: error)
+                request.didFail(with: nil, error: error)
             }
         }
         
         return request
     }
     
-    func upload<Convertible: URLRequestConvertible>(data: Data, with convertible: Convertible) -> DataRequest {
-        let request = DataRequest(underlyingQueue: rootQueue, delegate: delegate)
+    func upload<Convertible: URLRequestConvertible>(data: Data, with convertible: Convertible) -> UploadRequest {
+        let request = UploadRequest(underlyingQueue: rootQueue, delegate: delegate, uploadable: .data(data))
         
         requestQueue.async {
             do {
@@ -86,15 +86,15 @@ class SessionManager {
                 let task = self.session.uploadTask(with: urlRequest, from: data)
                 self.delegate.didCreate(urlRequest: urlRequest, for: request, and: task)
             } catch {
-                request.didFail(with: error)
+                request.didFail(with: nil, error: error)
             }
         }
         
         return request
     }
     
-    func upload<Convertible: URLRequestConvertible>(file fileURL: URL, with convertible: Convertible) -> DataRequest {
-        let request = DataRequest(underlyingQueue: rootQueue, delegate: delegate)
+    func upload<Convertible: URLRequestConvertible>(file fileURL: URL, with convertible: Convertible) -> UploadRequest {
+        let request = UploadRequest(underlyingQueue: rootQueue, delegate: delegate, uploadable: .file(fileURL))
         
         requestQueue.async {
             do {
@@ -104,7 +104,25 @@ class SessionManager {
                 let task = self.session.uploadTask(with: urlRequest, fromFile: fileURL)
                 self.delegate.didCreate(urlRequest: urlRequest, for: request, and: task)
             } catch {
-                request.didFail(with: error)
+                request.didFail(with: nil, error: error)
+            }
+        }
+        
+        return request
+    }
+    
+    func upload<Convertible: URLRequestConvertible>(stream: InputStream, with convertible: Convertible) -> UploadRequest {
+        let request = UploadRequest(underlyingQueue: rootQueue, delegate: delegate, uploadable: .stream(stream))
+        
+        requestQueue.async {
+            do {
+                let initialRequest = try convertible.asURLRequest()
+                let adaptedRequest = try self.adapter?.adapt(initialRequest)
+                let urlRequest = adaptedRequest ?? initialRequest
+                let task = self.session.uploadTask(withStreamedRequest: urlRequest)
+                self.delegate.didCreate(urlRequest: urlRequest, for: request, and: task)
+            } catch {
+                request.didFail(with: nil, error: error)
             }
         }
         

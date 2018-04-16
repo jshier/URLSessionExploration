@@ -295,11 +295,57 @@ class URLSessionExplorationTests: XCTestCase {
         // Then
         XCTAssertTrue(requestResult?.isSuccess == true)
     }
+    
+    func testUploadFromStreamRequest() {
+        // Given
+        let url = Bundle(for: URLSessionExplorationTests.self).url(forResource: "imac", withExtension: "jpg")!
+        let imageData = try! Data(contentsOf: url)
+        let manager = SessionManager()
+        let uploadable = Uploadable(imageData)
+        let expect = expectation(description: "upload should finish")
+        var requestResult: Result<Data>?
+        
+        // When
+        manager.upload(stream: uploadable.stream, with: uploadable).response { (result) in
+            requestResult = result
+            expect.fulfill()
+        }
+        
+        waitForExpectations(timeout: 5, handler: nil)
+        
+        // Then
+        XCTAssertTrue(requestResult?.isSuccess == true)
+    }
+    
+    func testUploadFromManualStreamRequest() {
+        // Given
+        let url = Bundle(for: URLSessionExplorationTests.self).url(forResource: "imac", withExtension: "jpg")!
+        let manager = SessionManager()
+        let uploadable = Uploadable()
+        let stream = InputStream(url: url)!
+        let expect = expectation(description: "upload should finish")
+        var requestResult: Result<Data>?
+        
+        // When
+        manager.upload(stream: stream, with: uploadable).response { (result) in
+            requestResult = result
+            expect.fulfill()
+        }
+        
+        waitForExpectations(timeout: 5, handler: nil)
+        
+        // Then
+        XCTAssertTrue(requestResult?.isSuccess == true)
+    }
 }
 
 struct Uploadable: URLRequestConvertible {
     let url = URL(string: "https://httpbin.org/anything")!
     let data: Data?
+    
+    var stream: InputStream {
+        return InputStream(data: data!)
+    }
     
     init(_ data: Data? = nil) {
         self.data = data

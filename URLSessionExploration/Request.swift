@@ -30,6 +30,10 @@ class Request {
     private weak var delegate: RequestDelegate?
     
     private(set) var request: URLRequest?
+    private(set) var response: HTTPURLResponse?
+    // TODO: Preseve all tasks?
+    // TODO: How to expose task progress on iOS 11?
+    private(set) var lastTask: URLSessionTask?
     var error: Error?
     
     init(id: UUID = UUID(), underlyingQueue: DispatchQueue, delegate: RequestDelegate) {
@@ -58,14 +62,16 @@ class Request {
         error = AFError.explicitlyCancelled
     }
     
-    func didFail(with error: Error) {
+    func didFail(with task: URLSessionTask?, error: Error) {
         // TODO: Investigate whether we want a different mechanism here.
         self.error = self.error ?? error
-        didComplete()
+        didComplete(task: task)
     }
     
-    func didComplete() {
+    func didComplete(task: URLSessionTask?) {
         state = .finished
+        lastTask = task
+
         queue.isSuspended = false
     }
     
@@ -120,10 +126,10 @@ class DataRequest: Request {
 class DownloadRequest: Request {
     private(set) var url: URL?
     
-    func didComplete(with url: URL) {
+    func didComplete(task: URLSessionTask, with url: URL) {
         self.url = url
         
-        didComplete()
+        didComplete(task: task)
     }
     
     @discardableResult
@@ -138,13 +144,28 @@ class DownloadRequest: Request {
     }
 }
 
-//class UploadRequest: Request {
-//    private(set) var data = Data()
-//    
-//    func didRecieve(data: Data) {
-//        self.data.append(data)
-//    }
-//}
+class UploadRequest: DataRequest {
+    enum Uploadable {
+        case data(Data)
+        case file(URL)
+        case stream(InputStream)
+    }
+    
+    let uploadable: Uploadable
+    
+    init(id: UUID = UUID(), underlyingQueue: DispatchQueue, delegate: RequestDelegate, uploadable: Uploadable) {
+        self.uploadable = uploadable
+        
+        super.init(id: id, underlyingQueue: underlyingQueue, delegate: delegate)
+    }
+    
+    func inputStream() -> InputStream {
+        switch uploadable {
+        case .stream(let stream): return stream
+        default: fatalError("Attempted to access the stream of an UploadRequest that wasn't created with one.")
+        }
+    }
+}
 
 extension Result {
     init(value: Value, error: Error?) {
