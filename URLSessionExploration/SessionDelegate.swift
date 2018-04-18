@@ -202,6 +202,7 @@ extension SessionDelegate: URLSessionDataDelegate {
     // Called, possibly more than once, to accumulate the data for a response.
     func urlSession(_ session: URLSession, dataTask: URLSessionDataTask, didReceive data: Data) {
         NSLog("URLSession: \(session), dataTask: \(dataTask), didReceiveDataOfLength: \(data.count)")
+        // TODO: UploadRequest will need this too, only works now because it's a subclass.
         guard let request = requestTaskMap[dataTask] as? DataRequest else {
             fatalError("dataTask received data for incorrect Request subclass: \(String(describing: requestTaskMap[dataTask]))")
         }

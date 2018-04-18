@@ -26,20 +26,27 @@ class Request {
     
     let id: UUID
     let underlyingQueue: DispatchQueue
-    let queue: OperationQueue
+    let serializationQueue: DispatchQueue
+    let internalQueue: OperationQueue
     private weak var delegate: RequestDelegate?
     
-    private(set) var request: URLRequest?
-    private(set) var response: HTTPURLResponse?
+    private(set) var initialRequest: URLRequest?
+    var finalRequest: URLRequest? {
+        return lastTask?.currentRequest
+    }
+    var response: HTTPURLResponse? {
+        return lastTask?.response as? HTTPURLResponse
+    }
     // TODO: Preseve all tasks?
     // TODO: How to expose task progress on iOS 11?
     private(set) var lastTask: URLSessionTask?
-    var error: Error?
+    private(set) var error: Error?
     
-    init(id: UUID = UUID(), underlyingQueue: DispatchQueue, delegate: RequestDelegate) {
+    init(id: UUID = UUID(), underlyingQueue: DispatchQueue, serializationQueue: DispatchQueue? = nil, delegate: RequestDelegate) {
         self.id = id
         self.underlyingQueue = underlyingQueue
-        queue = OperationQueue(maxConcurrentOperationCount: 1, underlyingQueue: underlyingQueue, name: "org.alamofire.request", startSuspended: true)
+        self.serializationQueue = serializationQueue ?? underlyingQueue
+        internalQueue = OperationQueue(maxConcurrentOperationCount: 1, underlyingQueue: underlyingQueue, name: "org.alamofire.request", startSuspended: true)
         self.delegate = delegate
     }
     
@@ -47,7 +54,7 @@ class Request {
     // Called from internal queue.
     
     func didCreate(request: URLRequest) {
-        self.request = request
+        self.initialRequest = request
     }
     
     func didResume() {
@@ -69,10 +76,10 @@ class Request {
     }
     
     func didComplete(task: URLSessionTask?) {
-        state = .finished
         lastTask = task
-
-        queue.isSuspended = false
+        state = .finished
+        
+        internalQueue.isSuspended = false
     }
     
     // MARK: - Public API
@@ -105,17 +112,21 @@ extension Request: Hashable {
 }
 
 class DataRequest: Request {
-    private(set) var data = Data()
+    private(set) var data: Data?
     
     func didRecieve(data: Data) {
-        self.data.append(data)
+        if self.data == nil {
+            self.data = data
+        } else {
+            self.data?.append(data)
+        }
     }
     
     @discardableResult
     func response(queue: DispatchQueue? = nil, completionHandler: @escaping DataRequestCompletionHandler) -> Self {
-        self.queue.addOperation {
+        internalQueue.addOperation {
             (queue ?? .main).async {
-                completionHandler(Result(value: self.data, error: self.error))
+                completionHandler(Result(value: self.data ?? Data(), error: self.error))
             }
         }
         
@@ -134,7 +145,7 @@ class DownloadRequest: Request {
     
     @discardableResult
     func response(queue: DispatchQueue? = nil, completionHandler: @escaping DownloadRequestCompletionHandler) -> Self {
-        self.queue.addOperation {
+        self.internalQueue.addOperation {
             (queue ?? .main).async {
                 completionHandler(Result(value: self.url, error: self.error))
             }

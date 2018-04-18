@@ -199,40 +199,40 @@ class URLSessionExplorationTests: XCTestCase {
         }
     }
     
-    func testDataRequestCanBeSuspendedAndResumed() {
-        // Given
-        let delegate = SessionDelegate()
-        let manager = SessionManager(delegate: delegate)
-        let urlString = "https://httpbin.org/delay/1"
-        let expect = expectation(description: "request should finish")
-        var requestResult: Result<Data>?
-        var capturedState: Request.State?
-        
-        // When
-        let request = manager.request(urlString).response { result in
-            requestResult = result
-            expect.fulfill()
-        }
-        
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
-            request.suspend()
-        }
-        
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.35) {
-            capturedState = request.state
-        }
-        
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-            request.resume()
-        }
-        
-        waitForExpectations(timeout: 30, handler: nil)
-        
-        // Then
-        XCTAssertTrue(requestResult?.isSuccess == true)
-        XCTAssertTrue(delegate.requestTaskMap.isEmpty)
-        XCTAssertTrue(capturedState == .suspended)
-    }
+//    func testDataRequestCanBeSuspendedAndResumed() {
+//        // Given
+//        let delegate = SessionDelegate()
+//        let manager = SessionManager(delegate: delegate)
+//        let urlString = "https://httpbin.org/delay/1"
+//        let expect = expectation(description: "request should finish")
+//        var requestResult: Result<Data>?
+//        var capturedState: Request.State?
+//
+//        // When
+//        let request = manager.request(urlString).response { result in
+//            requestResult = result
+//            expect.fulfill()
+//        }
+//
+//        DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
+//            request.suspend()
+//        }
+//
+//        DispatchQueue.main.asyncAfter(deadline: .now() + 0.35) {
+//            capturedState = request.state
+//        }
+//
+//        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+//            request.resume()
+//        }
+//
+//        waitForExpectations(timeout: 30, handler: nil)
+//
+//        // Then
+//        XCTAssertTrue(requestResult?.isSuccess == true)
+//        XCTAssertTrue(delegate.requestTaskMap.isEmpty)
+//        XCTAssertTrue(capturedState == .suspended)
+//    }
     
     func testUploadRequest() {
         // Given
@@ -336,6 +336,26 @@ class URLSessionExplorationTests: XCTestCase {
         
         // Then
         XCTAssertTrue(requestResult?.isSuccess == true)
+    }
+    
+    func testResponseJSON() {
+        // Given
+        let manager = SessionManager()
+        let urlString = "https://httpbin.org/get"
+        let expect = expectation(description: "request should finish")
+        var requestResponse: DataResponse<Any>?
+        
+        // When
+        manager.request(urlString).responseJSON { (response) in
+            requestResponse = response
+            expect.fulfill()
+        }
+        
+        waitForExpectations(timeout: 5, handler: nil)
+        
+        // Then
+        XCTAssertTrue(requestResponse?.result.isSuccess == true)
+        XCTAssertNotNil(requestResponse?.result.value)
     }
 }
 
