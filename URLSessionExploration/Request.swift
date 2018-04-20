@@ -41,6 +41,7 @@ class Request {
     // TODO: How to expose task progress on iOS 11?
     private(set) var lastTask: URLSessionTask?
     private(set) var error: Error?
+    private(set) var credential: URLCredential?
     
     init(id: UUID = UUID(), underlyingQueue: DispatchQueue, serializationQueue: DispatchQueue? = nil, delegate: RequestDelegate) {
         self.id = id
@@ -96,6 +97,23 @@ class Request {
     
     public func resume() {
         delegate?.resumeRequest(self)
+    }
+    
+    // MARK: - Closure API
+    
+    // Callable from any queue
+    // TODO: Handle race from internal queue?
+    @discardableResult
+    func authenticate(withUsername username: String, password: String, persistence: URLCredential.Persistence = .forSession) -> Self {
+        let credential = URLCredential(user: username, password: password, persistence: persistence)
+        return authenticate(with: credential)
+    }
+    
+    @discardableResult
+    func authenticate(with credential: URLCredential) -> Self {
+        self.credential = credential
+        
+        return self
     }
 }
 

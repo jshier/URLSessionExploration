@@ -357,6 +357,88 @@ class URLSessionExplorationTests: XCTestCase {
         XCTAssertTrue(requestResponse?.result.isSuccess == true)
         XCTAssertNotNil(requestResponse?.result.value)
     }
+    
+    func testBasicAuthWithoutAuthenticateFails() {
+        // Given
+        let manager = SessionManager()
+        let urlString = "https://httpbin.org/basic-auth/user/password"
+        let expect = expectation(description: "request should finish")
+        var requestResponse: DataResponse<Any>?
+        
+        // When
+        manager.request(urlString).responseJSON { (response) in
+            requestResponse = response
+            expect.fulfill()
+        }
+        
+        waitForExpectations(timeout: 5, handler: nil)
+        
+        // Then
+        XCTAssertTrue(requestResponse?.result.isSuccess == false)
+        XCTAssertNotNil(requestResponse?.result.error)
+        XCTAssertEqual(requestResponse?.response?.statusCode, 401)
+    }
+    
+    func testBasicAuthWithAuthenticateSucceeds() {
+        // Given
+        let manager = SessionManager()
+        let urlString = "https://httpbin.org/basic-auth/user/password"
+        let expect = expectation(description: "request should finish")
+        var requestResponse: DataResponse<Any>?
+        
+        // When
+        manager.request(urlString).responseJSON { (response) in
+            requestResponse = response
+            expect.fulfill()
+        }.authenticate(withUsername: "user", password: "password")
+        
+        waitForExpectations(timeout: 5, handler: nil)
+        
+        // Then
+        XCTAssertTrue(requestResponse?.result.isSuccess == true)
+        XCTAssertNotNil(requestResponse?.result.value)
+    }
+    
+    func testBasicAuthRejectsWhenAuthenticateIsIncorrect() {
+        // Given
+        let manager = SessionManager()
+        let urlString = "https://httpbin.org/basic-auth/user/password"
+        let expect = expectation(description: "request should finish")
+        var requestResponse: DataResponse<Any>?
+        
+        // When
+        manager.request(urlString).responseJSON { (response) in
+            requestResponse = response
+            expect.fulfill()
+        }.authenticate(withUsername: "user", password: "passwor")
+        
+        waitForExpectations(timeout: 5, handler: nil)
+        
+        // Then
+        XCTAssertTrue(requestResponse?.result.isSuccess == false)
+        XCTAssertNotNil(requestResponse?.result.error)
+        XCTAssertEqual(requestResponse?.response?.statusCode, 401)
+    }
+    
+    func testDigestAuthSucceedsWithAuthenticate() {
+        // Given
+        let manager = SessionManager()
+        let urlString = "https://httpbin.org/digest-auth/auth/user/password"
+        let expect = expectation(description: "request should finish")
+        var requestResponse: DataResponse<Any>?
+        
+        // When
+        manager.request(urlString).responseJSON { (response) in
+            requestResponse = response
+            expect.fulfill()
+        }.authenticate(withUsername: "user", password: "password")
+        
+        waitForExpectations(timeout: 5, handler: nil)
+        
+        // Then
+        XCTAssertTrue(requestResponse?.result.isSuccess == true)
+        XCTAssertNotNil(requestResponse?.result.value)
+    }
 }
 
 struct Uploadable: URLRequestConvertible {

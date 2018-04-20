@@ -78,26 +78,58 @@ extension SessionDelegate: URLSessionDelegate {
 
 extension SessionDelegate: URLSessionTaskDelegate {
     // Auth challenge, will be received always since the URLSessionDelegate method isn't implemented.
+    typealias ChallengeEvaluation = (disposition: URLSession.AuthChallengeDisposition, credential: URLCredential?, error: Error?)
     func urlSession(_ session: URLSession, task: URLSessionTask, didReceive challenge: URLAuthenticationChallenge, completionHandler: @escaping (URLSession.AuthChallengeDisposition, URLCredential?) -> Void) {
         NSLog("URLSession: \(session), task: \(task), didReceiveChallenge: \(challenge)")
+        
+        let evaluation: ChallengeEvaluation
+        switch challenge.protectionSpace.authenticationMethod {
+        case NSURLAuthenticationMethodServerTrust:
+            evaluation = attemptServerTrustAuthentication(with: challenge)
+        case NSURLAuthenticationMethodHTTPBasic, NSURLAuthenticationMethodHTTPDigest:
+            evaluation = attemptHTTPAuthentication(for: challenge, belongingTo: task)
+        default:
+            evaluation = (.performDefaultHandling, nil, nil)
+        }
+        
+        if let error = evaluation.error {
+            requestTaskMap[task]?.didFail(with: task, error: error)
+        }
+        
+        completionHandler(evaluation.disposition, evaluation.credential)
+    }
+    
+    func attemptServerTrustAuthentication(with challenge: URLAuthenticationChallenge) -> ChallengeEvaluation {
         let host = challenge.protectionSpace.host
         
         guard challenge.protectionSpace.authenticationMethod == NSURLAuthenticationMethodServerTrust,
             let evaluator = manager?.trustManager?.serverTrustEvaluators(forHost: host),
             let serverTrust = challenge.protectionSpace.serverTrust
-        else {
-            completionHandler(.performDefaultHandling, nil)
-            return
+            else {
+                return (.performDefaultHandling, nil, nil)
         }
         
         guard evaluator.evaluate(serverTrust, forHost: host) else {
-            requestTaskMap[task]?.didFail(with: task,
-                                          error: AFError.certificatePinningFailed(reason: .evaluationFailed))
-            completionHandler(.cancelAuthenticationChallenge, nil)
-            return
+            let error = AFError.certificatePinningFailed(reason: .evaluationFailed)
+            
+            return (.cancelAuthenticationChallenge, nil, error)
         }
         
-        completionHandler(.useCredential, URLCredential(trust: serverTrust))
+        return (.useCredential, URLCredential(trust: serverTrust), nil)
+    }
+    
+    func attemptHTTPAuthentication(for challenge: URLAuthenticationChallenge, belongingTo task: URLSessionTask) -> ChallengeEvaluation {
+        // TODO: Consider custom error, depending on error we get from session.
+        guard challenge.previousFailureCount == 0 else {
+            return (.rejectProtectionSpace, nil, nil)
+        }
+        
+        // TODO: Get credential from session's configuration's defaultCredential too.
+        guard let credential = requestTaskMap[task]?.credential else {
+            return (.performDefaultHandling, nil, nil)
+        }
+        
+        return (.useCredential, credential, nil)
     }
     
     // Progress of sending the body data.
