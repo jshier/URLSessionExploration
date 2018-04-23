@@ -19,7 +19,7 @@ protocol RequestDelegate: AnyObject {
 
 class Request {
     enum State {
-        case initialized, performing, suspended, finished
+        case initialized, performing, validating, suspended, finished
     }
     
     private(set) var state: State = .initialized

@@ -26,6 +26,7 @@
 		31A8A72C207AF1C700B6364B /* EventMonitor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 31A8A72B207AF1C700B6364B /* EventMonitor.swift */; };
 		31A8A72F207AF5F100B6364B /* imac.jpg in Resources */ = {isa = PBXBuildFile; fileRef = 31A8A72E207AF5F100B6364B /* imac.jpg */; };
 		31C548E32079A36C0093BF8B /* RequestTaskMap.swift in Sources */ = {isa = PBXBuildFile; fileRef = 31C548E22079A36C0093BF8B /* RequestTaskMap.swift */; };
+		31FC1CFB208D48BD0042E91C /* Validation.swift in Sources */ = {isa = PBXBuildFile; fileRef = 31FC1CFA208D48BD0042E91C /* Validation.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -63,6 +64,7 @@
 		31C548E020799A7B0093BF8B /* RequestTaskMapTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RequestTaskMapTests.swift; sourceTree = "<group>"; };
 		31C548E22079A36C0093BF8B /* RequestTaskMap.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RequestTaskMap.swift; sourceTree = "<group>"; };
 		31E63A9E208432DD0035D97F /* StressTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StressTests.swift; sourceTree = "<group>"; };
+		31FC1CFA208D48BD0042E91C /* Validation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Validation.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -121,6 +123,7 @@
 				31A8A72B207AF1C700B6364B /* EventMonitor.swift */,
 				3130760C2086DE21001B9230 /* ResponseSerialization.swift */,
 				3130760E2086DEA1001B9230 /* Response.swift */,
+				31FC1CFA208D48BD0042E91C /* Validation.swift */,
 			);
 			path = URLSessionExploration;
 			sourceTree = "<group>";
@@ -247,6 +250,7 @@
 				31A8A72C207AF1C700B6364B /* EventMonitor.swift in Sources */,
 				3132B7DC1FDCA2C0003DD9E0 /* ViewController.swift in Sources */,
 				3132B7FF1FDCC646003DD9E0 /* Result.swift in Sources */,
+				31FC1CFB208D48BD0042E91C /* Validation.swift in Sources */,
 				3130760F2086DEA1001B9230 /* Response.swift in Sources */,
 				31C548E32079A36C0093BF8B /* RequestTaskMap.swift in Sources */,
 				3130760D2086DE21001B9230 /* ResponseSerialization.swift in Sources */,
