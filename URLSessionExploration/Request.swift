@@ -19,7 +19,7 @@ protocol RequestDelegate: AnyObject {
 
 class Request {
     enum State {
-        case initialized, performing, validating, suspended, finished
+        case initialized, performing, suspended, validating, finished
     }
     
     private(set) var state: State = .initialized
@@ -40,8 +40,9 @@ class Request {
     // TODO: Preseve all tasks?
     // TODO: How to expose task progress on iOS 11?
     private(set) var lastTask: URLSessionTask?
-    private(set) var error: Error?
+    fileprivate(set) var error: Error?
     private(set) var credential: URLCredential?
+    fileprivate(set) var validators: [() -> Void] = []
     
     init(id: UUID = UUID(), underlyingQueue: DispatchQueue, serializationQueue: DispatchQueue? = nil, delegate: RequestDelegate) {
         self.id = id
@@ -49,6 +50,11 @@ class Request {
         self.serializationQueue = serializationQueue ?? underlyingQueue
         internalQueue = OperationQueue(maxConcurrentOperationCount: 1, underlyingQueue: underlyingQueue, name: "org.alamofire.request", startSuspended: true)
         self.delegate = delegate
+        
+        internalQueue.addOperation {
+            self.validators.forEach { $0() }
+            self.state = .finished
+        }
     }
     
     // MARK: - Internal API
@@ -78,7 +84,7 @@ class Request {
     
     func didComplete(task: URLSessionTask?) {
         lastTask = task
-        state = .finished
+        state = .validating
         
         internalQueue.isSuspended = false
     }
@@ -150,13 +156,43 @@ class DataRequest: Request {
         
         return self
     }
+    
+    /// A closure used to validate a request that takes a URL request, a URL response and data, and returns whether the
+    /// request was valid.
+    public typealias Validation = (URLRequest?, HTTPURLResponse, Data?) -> ValidationResult
+    
+    /// Validates the request, using the specified closure.
+    ///
+    /// If validation fails, subsequent calls to response handlers will have an associated error.
+    ///
+    /// - parameter validation: A closure to validate the request.
+    ///
+    /// - returns: The request.
+    @discardableResult
+    public func validate(_ validation: @escaping Validation) -> Self {
+        underlyingQueue.async {
+            let validationExecution: () -> Void = { [unowned self] in
+                if
+                    let response = self.response,
+                    self.error == nil,
+                    case let .failure(error) = validation(self.finalRequest, response, self.data)
+                {
+                    self.error = error
+                }
+            }
+            
+            self.validators.append(validationExecution)
+        }
+        
+        return self
+    }
 }
 
 class DownloadRequest: Request {
-    private(set) var url: URL?
+    private(set) var temporaryURL: URL?
     
     func didComplete(task: URLSessionTask, with url: URL) {
-        self.url = url
+        temporaryURL = url
         
         didComplete(task: task)
     }
@@ -165,8 +201,47 @@ class DownloadRequest: Request {
     func response(queue: DispatchQueue? = nil, completionHandler: @escaping DownloadRequestCompletionHandler) -> Self {
         self.internalQueue.addOperation {
             (queue ?? .main).async {
-                completionHandler(Result(value: self.url, error: self.error))
+                completionHandler(Result(value: self.temporaryURL, error: self.error))
             }
+        }
+        
+        return self
+    }
+    
+    /// A closure used to validate a request that takes a URL request, a URL response, a temporary URL and a
+    /// destination URL, and returns whether the request was valid.
+    public typealias Validation = (
+        _ request: URLRequest?,
+        _ response: HTTPURLResponse,
+        _ temporaryURL: URL?,
+        _ destinationURL: URL?)
+        -> ValidationResult
+    
+    /// Validates the request, using the specified closure.
+    ///
+    /// If validation fails, subsequent calls to response handlers will have an associated error.
+    ///
+    /// - parameter validation: A closure to validate the request.
+    ///
+    /// - returns: The request.
+    @discardableResult
+    public func validate(_ validation: @escaping Validation) -> Self {
+        underlyingQueue.async {
+            let validationExecution: () -> Void = { [unowned self] in
+                let request = self.finalRequest
+                let temporaryURL = self.temporaryURL
+                let destinationURL = self.temporaryURL
+                
+                if
+                    let response = self.response,
+                    self.error == nil,
+                    case let .failure(error) = validation(request, response, temporaryURL, destinationURL)
+                {
+                    self.error = error
+                }
+            }
+            
+            self.validators.append(validationExecution)
         }
         
         return self

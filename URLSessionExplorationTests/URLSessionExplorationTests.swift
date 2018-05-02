@@ -170,6 +170,29 @@ class URLSessionExplorationTests: XCTestCase {
         XCTAssertTrue(requestResult?.isSuccess == true)
     }
     
+    func testDownloadFailsWithValidation() {
+        // Given
+        let manager = SessionManager()
+        let urlString = "https://httpbin.org/status/404"
+        let expect = expectation(description: "download should finish")
+        var requestResult: Result<URL?>?
+        
+        // When
+        manager.download(urlString).validate(statusCode: 200..<400).response { result in
+            requestResult = result
+            expect.fulfill()
+        }
+        waitForExpectations(timeout: 5, handler: nil)
+        
+        // Then
+        XCTAssertTrue(requestResult?.isFailure == true)
+        guard let error = requestResult?.error as? AFError,
+            error.isResponseValidationError else {
+                XCTFail()
+                return
+        }
+    }
+    
     func testDataRequestCanBeCancelled() {
         // Given
         let delegate = SessionDelegate()
@@ -366,7 +389,8 @@ class URLSessionExplorationTests: XCTestCase {
         var requestResponse: DataResponse<Any>?
         
         // When
-        manager.request(urlString).responseJSON { (response) in
+        // Requires validation to fail, as failing Basic Auth returns 401.
+        manager.request(urlString).validate().responseJSON { (response) in
             requestResponse = response
             expect.fulfill()
         }
@@ -438,6 +462,30 @@ class URLSessionExplorationTests: XCTestCase {
         // Then
         XCTAssertTrue(requestResponse?.result.isSuccess == true)
         XCTAssertNotNil(requestResponse?.result.value)
+    }
+    
+    func testCodeValidatorsWork() {
+        // Give
+        let manager = SessionManager()
+        let urlString = "https://httpbin.org/status/404"
+        let expect = expectation(description: "request should finish")
+        var requestResponse: DataResponse<Any>?
+        
+        // When
+        manager.request(urlString).validate(statusCode: 200..<400).responseJSON { (response) in
+            requestResponse = response
+            expect.fulfill()
+        }
+        
+        waitForExpectations(timeout: 5, handler: nil)
+        
+        // Then
+        XCTAssertTrue(requestResponse?.result.isFailure == true)
+        guard let error = requestResponse?.result.error as? AFError,
+            error.isResponseValidationError else {
+            XCTFail()
+            return
+        }
     }
 }
 

@@ -19,12 +19,12 @@
 		3132B7FA1FDCA2D9003DD9E0 /* SessionManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3132B7F91FDCA2D9003DD9E0 /* SessionManager.swift */; };
 		3132B7FD1FDCBC87003DD9E0 /* Request.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3132B7FC1FDCBC87003DD9E0 /* Request.swift */; };
 		3132B7FF1FDCC646003DD9E0 /* Result.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3132B7FE1FDCC646003DD9E0 /* Result.swift */; };
+		3143E8AB2099357B0017E311 /* imac.jpg in Resources */ = {isa = PBXBuildFile; fileRef = 3143E8AA2099357B0017E311 /* imac.jpg */; };
 		314611F6201432D4000F35F9 /* SessionDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 314611F5201432D4000F35F9 /* SessionDelegate.swift */; };
 		314611F920146A4F000F35F9 /* RequestProtocols.swift in Sources */ = {isa = PBXBuildFile; fileRef = 314611F820146A4F000F35F9 /* RequestProtocols.swift */; };
 		314611FB20146C63000F35F9 /* AFError.swift in Sources */ = {isa = PBXBuildFile; fileRef = 314611FA20146C63000F35F9 /* AFError.swift */; };
 		314611FE20148410000F35F9 /* ServerTrustEvaluation.swift in Sources */ = {isa = PBXBuildFile; fileRef = 314611FD20148410000F35F9 /* ServerTrustEvaluation.swift */; };
 		31A8A72C207AF1C700B6364B /* EventMonitor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 31A8A72B207AF1C700B6364B /* EventMonitor.swift */; };
-		31A8A72F207AF5F100B6364B /* imac.jpg in Resources */ = {isa = PBXBuildFile; fileRef = 31A8A72E207AF5F100B6364B /* imac.jpg */; };
 		31C548E32079A36C0093BF8B /* RequestTaskMap.swift in Sources */ = {isa = PBXBuildFile; fileRef = 31C548E22079A36C0093BF8B /* RequestTaskMap.swift */; };
 		31FC1CFB208D48BD0042E91C /* Validation.swift in Sources */ = {isa = PBXBuildFile; fileRef = 31FC1CFA208D48BD0042E91C /* Validation.swift */; };
 /* End PBXBuildFile section */
@@ -55,12 +55,12 @@
 		3132B7F91FDCA2D9003DD9E0 /* SessionManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionManager.swift; sourceTree = "<group>"; };
 		3132B7FC1FDCBC87003DD9E0 /* Request.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Request.swift; sourceTree = "<group>"; };
 		3132B7FE1FDCC646003DD9E0 /* Result.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Result.swift; sourceTree = "<group>"; };
+		3143E8AA2099357B0017E311 /* imac.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = imac.jpg; sourceTree = "<group>"; };
 		314611F5201432D4000F35F9 /* SessionDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionDelegate.swift; sourceTree = "<group>"; };
 		314611F820146A4F000F35F9 /* RequestProtocols.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RequestProtocols.swift; sourceTree = "<group>"; };
 		314611FA20146C63000F35F9 /* AFError.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AFError.swift; sourceTree = "<group>"; };
 		314611FD20148410000F35F9 /* ServerTrustEvaluation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ServerTrustEvaluation.swift; sourceTree = "<group>"; };
 		31A8A72B207AF1C700B6364B /* EventMonitor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EventMonitor.swift; sourceTree = "<group>"; };
-		31A8A72E207AF5F100B6364B /* imac.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; name = imac.jpg; path = ../../../../Downloads/imacpro_5k_retina_display_20171214/imac.jpg; sourceTree = "<group>"; };
 		31C548E020799A7B0093BF8B /* RequestTaskMapTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RequestTaskMapTests.swift; sourceTree = "<group>"; };
 		31C548E22079A36C0093BF8B /* RequestTaskMap.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RequestTaskMap.swift; sourceTree = "<group>"; };
 		31E63A9E208432DD0035D97F /* StressTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StressTests.swift; sourceTree = "<group>"; };
@@ -133,8 +133,8 @@
 			children = (
 				3132B7EE1FDCA2C0003DD9E0 /* URLSessionExplorationTests.swift */,
 				31C548E020799A7B0093BF8B /* RequestTaskMapTests.swift */,
-				31A8A72E207AF5F100B6364B /* imac.jpg */,
 				3132B7F01FDCA2C0003DD9E0 /* Info.plist */,
+				3143E8AA2099357B0017E311 /* imac.jpg */,
 				31E63A9E208432DD0035D97F /* StressTests.swift */,
 			);
 			path = URLSessionExplorationTests;
@@ -185,7 +185,7 @@
 			isa = PBXProject;
 			attributes = {
 				LastSwiftUpdateCheck = 0920;
-				LastUpgradeCheck = 0920;
+				LastUpgradeCheck = 0930;
 				ORGANIZATIONNAME = "Jon Shier";
 				TargetAttributes = {
 					3132B7D51FDCA2C0003DD9E0 = {
@@ -233,7 +233,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				31A8A72F207AF5F100B6364B /* imac.jpg in Resources */,
+				3143E8AB2099357B0017E311 /* imac.jpg in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -314,6 +314,7 @@
 				CLANG_WARN_BOOL_CONVERSION = YES;
 				CLANG_WARN_COMMA = YES;
 				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
 				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
 				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
 				CLANG_WARN_EMPTY_BODY = YES;
@@ -321,6 +322,7 @@
 				CLANG_WARN_INFINITE_RECURSION = YES;
 				CLANG_WARN_INT_CONVERSION = YES;
 				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
 				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
 				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
 				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
@@ -348,7 +350,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 11.2;
+				IPHONEOS_DEPLOYMENT_TARGET = 9.3;
 				MTL_ENABLE_DEBUG_INFO = YES;
 				ONLY_ACTIVE_ARCH = YES;
 				SDKROOT = iphoneos;
@@ -371,6 +373,7 @@
 				CLANG_WARN_BOOL_CONVERSION = YES;
 				CLANG_WARN_COMMA = YES;
 				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
 				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
 				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
 				CLANG_WARN_EMPTY_BODY = YES;
@@ -378,6 +381,7 @@
 				CLANG_WARN_INFINITE_RECURSION = YES;
 				CLANG_WARN_INT_CONVERSION = YES;
 				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
 				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
 				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
 				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
@@ -399,7 +403,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 11.2;
+				IPHONEOS_DEPLOYMENT_TARGET = 9.3;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				SDKROOT = iphoneos;
 				SWIFT_OPTIMIZATION_LEVEL = "-Owholemodule";
