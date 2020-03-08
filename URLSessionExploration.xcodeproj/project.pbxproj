@@ -8,25 +8,13 @@
 
 /* Begin PBXBuildFile section */
 		313076082086DBD0001B9230 /* URLSessionExplorationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3132B7EE1FDCA2C0003DD9E0 /* URLSessionExplorationTests.swift */; };
-		313076092086DBD0001B9230 /* RequestTaskMapTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 31C548E020799A7B0093BF8B /* RequestTaskMapTests.swift */; };
-		3130760D2086DE21001B9230 /* ResponseSerialization.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3130760C2086DE21001B9230 /* ResponseSerialization.swift */; };
-		3130760F2086DEA1001B9230 /* Response.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3130760E2086DEA1001B9230 /* Response.swift */; };
 		3132B7DA1FDCA2C0003DD9E0 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3132B7D91FDCA2C0003DD9E0 /* AppDelegate.swift */; };
 		3132B7DC1FDCA2C0003DD9E0 /* ViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3132B7DB1FDCA2C0003DD9E0 /* ViewController.swift */; };
 		3132B7DF1FDCA2C0003DD9E0 /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 3132B7DD1FDCA2C0003DD9E0 /* Main.storyboard */; };
 		3132B7E11FDCA2C0003DD9E0 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 3132B7E01FDCA2C0003DD9E0 /* Assets.xcassets */; };
 		3132B7E41FDCA2C0003DD9E0 /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 3132B7E21FDCA2C0003DD9E0 /* LaunchScreen.storyboard */; };
-		3132B7FA1FDCA2D9003DD9E0 /* SessionManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3132B7F91FDCA2D9003DD9E0 /* SessionManager.swift */; };
-		3132B7FD1FDCBC87003DD9E0 /* Request.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3132B7FC1FDCBC87003DD9E0 /* Request.swift */; };
-		3132B7FF1FDCC646003DD9E0 /* Result.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3132B7FE1FDCC646003DD9E0 /* Result.swift */; };
 		3143E8AB2099357B0017E311 /* imac.jpg in Resources */ = {isa = PBXBuildFile; fileRef = 3143E8AA2099357B0017E311 /* imac.jpg */; };
 		314611F6201432D4000F35F9 /* SessionDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 314611F5201432D4000F35F9 /* SessionDelegate.swift */; };
-		314611F920146A4F000F35F9 /* RequestProtocols.swift in Sources */ = {isa = PBXBuildFile; fileRef = 314611F820146A4F000F35F9 /* RequestProtocols.swift */; };
-		314611FB20146C63000F35F9 /* AFError.swift in Sources */ = {isa = PBXBuildFile; fileRef = 314611FA20146C63000F35F9 /* AFError.swift */; };
-		314611FE20148410000F35F9 /* ServerTrustEvaluation.swift in Sources */ = {isa = PBXBuildFile; fileRef = 314611FD20148410000F35F9 /* ServerTrustEvaluation.swift */; };
-		31A8A72C207AF1C700B6364B /* EventMonitor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 31A8A72B207AF1C700B6364B /* EventMonitor.swift */; };
-		31C548E32079A36C0093BF8B /* RequestTaskMap.swift in Sources */ = {isa = PBXBuildFile; fileRef = 31C548E22079A36C0093BF8B /* RequestTaskMap.swift */; };
-		31FC1CFB208D48BD0042E91C /* Validation.swift in Sources */ = {isa = PBXBuildFile; fileRef = 31FC1CFA208D48BD0042E91C /* Validation.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -40,8 +28,6 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
-		3130760C2086DE21001B9230 /* ResponseSerialization.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ResponseSerialization.swift; sourceTree = "<group>"; };
-		3130760E2086DEA1001B9230 /* Response.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Response.swift; sourceTree = "<group>"; };
 		3132B7D61FDCA2C0003DD9E0 /* URLSessionExploration.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = URLSessionExploration.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		3132B7D91FDCA2C0003DD9E0 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		3132B7DB1FDCA2C0003DD9E0 /* ViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ViewController.swift; sourceTree = "<group>"; };
@@ -52,19 +38,10 @@
 		3132B7EA1FDCA2C0003DD9E0 /* URLSessionExplorationTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = URLSessionExplorationTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		3132B7EE1FDCA2C0003DD9E0 /* URLSessionExplorationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = URLSessionExplorationTests.swift; sourceTree = "<group>"; };
 		3132B7F01FDCA2C0003DD9E0 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
-		3132B7F91FDCA2D9003DD9E0 /* SessionManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionManager.swift; sourceTree = "<group>"; };
-		3132B7FC1FDCBC87003DD9E0 /* Request.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Request.swift; sourceTree = "<group>"; };
-		3132B7FE1FDCC646003DD9E0 /* Result.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Result.swift; sourceTree = "<group>"; };
 		3143E8AA2099357B0017E311 /* imac.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = imac.jpg; sourceTree = "<group>"; };
 		314611F5201432D4000F35F9 /* SessionDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionDelegate.swift; sourceTree = "<group>"; };
-		314611F820146A4F000F35F9 /* RequestProtocols.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RequestProtocols.swift; sourceTree = "<group>"; };
-		314611FA20146C63000F35F9 /* AFError.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AFError.swift; sourceTree = "<group>"; };
-		314611FD20148410000F35F9 /* ServerTrustEvaluation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ServerTrustEvaluation.swift; sourceTree = "<group>"; };
-		31A8A72B207AF1C700B6364B /* EventMonitor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EventMonitor.swift; sourceTree = "<group>"; };
-		31C548E020799A7B0093BF8B /* RequestTaskMapTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RequestTaskMapTests.swift; sourceTree = "<group>"; };
-		31C548E22079A36C0093BF8B /* RequestTaskMap.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RequestTaskMap.swift; sourceTree = "<group>"; };
+		31A1A7A6241471EA00D23266 /* URLSessionExploration.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = URLSessionExploration.entitlements; sourceTree = "<group>"; };
 		31E63A9E208432DD0035D97F /* StressTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StressTests.swift; sourceTree = "<group>"; };
-		31FC1CFA208D48BD0042E91C /* Validation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Validation.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -106,24 +83,14 @@
 		3132B7D81FDCA2C0003DD9E0 /* URLSessionExploration */ = {
 			isa = PBXGroup;
 			children = (
+				31A1A7A6241471EA00D23266 /* URLSessionExploration.entitlements */,
 				3132B7D91FDCA2C0003DD9E0 /* AppDelegate.swift */,
 				3132B7DB1FDCA2C0003DD9E0 /* ViewController.swift */,
 				3132B7DD1FDCA2C0003DD9E0 /* Main.storyboard */,
 				3132B7E01FDCA2C0003DD9E0 /* Assets.xcassets */,
 				3132B7E21FDCA2C0003DD9E0 /* LaunchScreen.storyboard */,
 				3132B7E51FDCA2C0003DD9E0 /* Info.plist */,
-				3132B7F91FDCA2D9003DD9E0 /* SessionManager.swift */,
 				314611F5201432D4000F35F9 /* SessionDelegate.swift */,
-				3132B7FC1FDCBC87003DD9E0 /* Request.swift */,
-				31C548E22079A36C0093BF8B /* RequestTaskMap.swift */,
-				3132B7FE1FDCC646003DD9E0 /* Result.swift */,
-				314611F820146A4F000F35F9 /* RequestProtocols.swift */,
-				314611FA20146C63000F35F9 /* AFError.swift */,
-				314611FD20148410000F35F9 /* ServerTrustEvaluation.swift */,
-				31A8A72B207AF1C700B6364B /* EventMonitor.swift */,
-				3130760C2086DE21001B9230 /* ResponseSerialization.swift */,
-				3130760E2086DEA1001B9230 /* Response.swift */,
-				31FC1CFA208D48BD0042E91C /* Validation.swift */,
 			);
 			path = URLSessionExploration;
 			sourceTree = "<group>";
@@ -132,7 +99,6 @@
 			isa = PBXGroup;
 			children = (
 				3132B7EE1FDCA2C0003DD9E0 /* URLSessionExplorationTests.swift */,
-				31C548E020799A7B0093BF8B /* RequestTaskMapTests.swift */,
 				3132B7F01FDCA2C0003DD9E0 /* Info.plist */,
 				3143E8AA2099357B0017E311 /* imac.jpg */,
 				31E63A9E208432DD0035D97F /* StressTests.swift */,
@@ -244,20 +210,9 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				314611FE20148410000F35F9 /* ServerTrustEvaluation.swift in Sources */,
-				314611F920146A4F000F35F9 /* RequestProtocols.swift in Sources */,
-				314611FB20146C63000F35F9 /* AFError.swift in Sources */,
-				31A8A72C207AF1C700B6364B /* EventMonitor.swift in Sources */,
 				3132B7DC1FDCA2C0003DD9E0 /* ViewController.swift in Sources */,
-				3132B7FF1FDCC646003DD9E0 /* Result.swift in Sources */,
-				31FC1CFB208D48BD0042E91C /* Validation.swift in Sources */,
-				3130760F2086DEA1001B9230 /* Response.swift in Sources */,
-				31C548E32079A36C0093BF8B /* RequestTaskMap.swift in Sources */,
-				3130760D2086DE21001B9230 /* ResponseSerialization.swift in Sources */,
-				3132B7FD1FDCBC87003DD9E0 /* Request.swift in Sources */,
 				314611F6201432D4000F35F9 /* SessionDelegate.swift in Sources */,
 				3132B7DA1FDCA2C0003DD9E0 /* AppDelegate.swift in Sources */,
-				3132B7FA1FDCA2D9003DD9E0 /* SessionManager.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -266,7 +221,6 @@
 			buildActionMask = 2147483647;
 			files = (
 				313076082086DBD0001B9230 /* URLSessionExplorationTests.swift in Sources */,
-				313076092086DBD0001B9230 /* RequestTaskMapTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -350,7 +304,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 9.3;
+				IPHONEOS_DEPLOYMENT_TARGET = 10.0;
 				MTL_ENABLE_DEBUG_INFO = YES;
 				ONLY_ACTIVE_ARCH = YES;
 				SDKROOT = iphoneos;
@@ -403,7 +357,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 9.3;
+				IPHONEOS_DEPLOYMENT_TARGET = 10.0;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				SDKROOT = iphoneos;
 				SWIFT_OPTIMIZATION_LEVEL = "-Owholemodule";
@@ -415,13 +369,15 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_ENTITLEMENTS = URLSessionExploration/URLSessionExploration.entitlements;
 				CODE_SIGN_STYLE = Automatic;
+				DERIVE_MACCATALYST_PRODUCT_BUNDLE_IDENTIFIER = YES;
 				DEVELOPMENT_TEAM = 555RUP2XT7;
 				INFOPLIST_FILE = URLSessionExploration/Info.plist;
-				IPHONEOS_DEPLOYMENT_TARGET = 9.3;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
 				PRODUCT_BUNDLE_IDENTIFIER = com.jonshier.URLSessionExploration;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				SUPPORTS_MACCATALYST = YES;
 				SWIFT_VERSION = 4.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};
@@ -431,13 +387,15 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_ENTITLEMENTS = URLSessionExploration/URLSessionExploration.entitlements;
 				CODE_SIGN_STYLE = Automatic;
+				DERIVE_MACCATALYST_PRODUCT_BUNDLE_IDENTIFIER = YES;
 				DEVELOPMENT_TEAM = 555RUP2XT7;
 				INFOPLIST_FILE = URLSessionExploration/Info.plist;
-				IPHONEOS_DEPLOYMENT_TARGET = 9.3;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
 				PRODUCT_BUNDLE_IDENTIFIER = com.jonshier.URLSessionExploration;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				SUPPORTS_MACCATALYST = YES;
 				SWIFT_VERSION = 4.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};

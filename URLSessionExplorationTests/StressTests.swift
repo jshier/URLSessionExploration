@@ -10,30 +10,7 @@
 import URLSessionExploration
 import XCTest
 
-class StressTests: XCTestCase {
-//    func test100Requests() {
-//        // Given
-//        let manager = SessionManager()
-//        let indicies = (0..<100).map { $0 }
-//        let requests = indicies.map(Requestable.init)
-//        let expectations = indicies.map { expectation(description: "Request \($0) should finish.") }
-//        var results: [Result<Data>] = []
-//        
-//        // When
-//        for i in indicies {
-//            manager.request(requests[i]).response { (result) in
-//                results.append(result)
-//                expectations[i].fulfill()
-//            }
-//        }
-//        
-//        waitForExpectations(timeout: 60, handler: nil)
-//        
-//        // Then
-//        XCTAssertEqual(results.count, 100)
-//        XCTAssertEqual(results.filter { $0.isSuccess }.count, 100)
-//    }
-    
+final class StressTests: XCTestCase {
     func test1000Requests() {
         // Given
         let manager = SessionManager()

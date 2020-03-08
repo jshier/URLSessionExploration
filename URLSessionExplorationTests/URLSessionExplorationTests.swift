@@ -9,502 +9,144 @@
 import XCTest
 @testable import URLSessionExploration
 
-extension String: URLRequestConvertible {
-    public func asURLRequest() throws -> URLRequest {
-        let url = URL(string: self)!
-        var request = URLRequest(url: url)
-        request.httpMethod = "GET"
-        
-        return request
-    }
-}
-
-class URLSessionExplorationTests: XCTestCase {
-    
+final class URLSessionExplorationTests: XCTestCase {
     func testRequest() {
         // Given
-        let manager = SessionManager()
-        let urlString = "https://httpbin.org/get"
-        let expect = expectation(description: "request should finish")
-        var requestResult: Result<Data>?
-        
-        // When
-        manager.request(urlString).response { result in
-            requestResult = result
-            expect.fulfill()
-        }
-        waitForExpectations(timeout: 30, handler: nil)
-        
-        // Then
-        XCTAssertTrue(requestResult?.isSuccess == true)
-    }
-    
-    func testDelegateIsEmptyAfterRequestFinishes() {
-        // Given
+        let request = URLRequest.makeHTTPBinRequest()
         let delegate = SessionDelegate()
-        let manager = SessionManager(delegate: delegate)
-        let urlString = "https://httpbin.org/get"
-        let expect = expectation(description: "request should finish")
-        var requestResult: Result<Data>?
+        let queue = DispatchQueue(label: "aQueue")
+        let opQueue = OperationQueue()
+        opQueue.maxConcurrentOperationCount = 1
+        opQueue.underlyingQueue = queue
+        let didGather = expectation(description: "metrics gathered")
+        let didComplete = expectation(description: "didComplete")
+        delegate.didGatherMetrics = { didGather.fulfill() }
+        delegate.didComplete = { didComplete.fulfill() }
+        let configuration = URLSessionConfiguration.default
+        configuration.httpAdditionalHeaders = ["Header": "Header"]
+        let session = URLSession(configuration: configuration, delegate: delegate, delegateQueue: opQueue)
         
         // When
-        manager.request(urlString).response { result in
-            requestResult = result
-            expect.fulfill()
-        }
-        waitForExpectations(timeout: 30, handler: nil)
+        let task = session.dataTask(with: request)
+        task.resume()
+        task.cancel()
+        
+        wait(for: [didGather, didComplete], timeout: 1, enforceOrder: true)
         
         // Then
-        XCTAssertTrue(requestResult?.isSuccess == true)
-        XCTAssertTrue(delegate.requestTaskMap.isEmpty)
+        XCTAssertTrue(session.configuration.allowsCellularAccess)
     }
     
-    func testFailedConvertible() {
+    func testRequestAsyncCancel() {
         // Given
-        struct ConvertibleFailure: URLRequestConvertible, Error {
-            func asURLRequest() throws -> URLRequest {
-                throw self
-            }
-        }
-        let manager = SessionManager()
-        let expect = expectation(description: "request should fail")
-        var requestResult: Result<Data>?
+        let request = URLRequest.makeHTTPBinRequest()
+        let delegate = SessionDelegate()
+        let queue = DispatchQueue(label: "aQueue")
+        let opQueue = OperationQueue()
+        opQueue.maxConcurrentOperationCount = 1
+        opQueue.underlyingQueue = queue
+        let didGather = expectation(description: "metrics gathered")
+        let didComplete = expectation(description: "didComplete")
+        delegate.didGatherMetrics = { didGather.fulfill() }
+        delegate.didComplete = { didComplete.fulfill() }
+        let configuration = URLSessionConfiguration.default
+        configuration.httpAdditionalHeaders = ["Header": "Header"]
+        let session = URLSession(configuration: configuration, delegate: delegate, delegateQueue: opQueue)
         
         // When
-        manager.request(ConvertibleFailure()).response { result in
-            requestResult = result
-            expect.fulfill()
-        }
-        waitForExpectations(timeout: 30, handler: nil)
+        let task = session.dataTask(with: request)
+        task.resume()
+        DispatchQueue.main.async { task.cancel() }
+        
+        wait(for: [didGather, didComplete], timeout: 1, enforceOrder: true)
         
         // Then
-        XCTAssertTrue(requestResult?.isSuccess == false)
-        XCTAssertNotNil(requestResult?.error)
+        XCTAssertTrue(session.configuration.allowsCellularAccess)
     }
     
-    func testFailedAdapter() {
+    func testDownloadNotWorking() {
         // Given
-        struct FailingAdapter: RequestAdapter, Error {
-            func adapt(_ urlRequest: URLRequest) throws -> URLRequest {
-                throw self
-            }
-        }
-        let manager = SessionManager(requestAdapter: FailingAdapter())
-        let expect = expectation(description: "request should fail")
-        var requestResult: Result<Data>?
+        let request = URLRequest.makeHTTPBinRequest()
+        let delegate = SessionDelegate()
+        let queue = DispatchQueue(label: "aQueue")
+        let opQueue = OperationQueue()
+        opQueue.maxConcurrentOperationCount = 1
+        opQueue.underlyingQueue = queue
+        let didGather = expectation(description: "metrics gathered")
+        let didComplete = expectation(description: "didComplete")
+        delegate.didGatherMetrics = { didGather.fulfill() }
+        delegate.didComplete = { didComplete.fulfill() }
+        let configuration = URLSessionConfiguration.default
+        configuration.httpAdditionalHeaders = ["Header": "Header"]
+        let session = URLSession(configuration: configuration, delegate: delegate, delegateQueue: opQueue)
         
         // When
-        manager.request("https://httpbin.org/get").response { result in
-            requestResult = result
-            expect.fulfill()
-        }
-        waitForExpectations(timeout: 30, handler: nil)
+        let task = session.downloadTask(with: request)
+        task.resume()
+        DispatchQueue.main.async { task.cancel() }
+        
+        wait(for: [didComplete, didGather], timeout: 1)
         
         // Then
-        XCTAssertTrue(requestResult?.isSuccess == false)
-        XCTAssertNotNil(requestResult?.error)
-    }
-    
-    func testFailedEvaluator() {
-        // Given
-        struct FailedEvaluator: ServerTrustEvaluating {
-            func evaluate(_ trust: SecTrust, forHost host: String) -> Bool {
-                return false
-            }
-        }
-        let trustManager = ServerTrustManager(evaluators: ["httpbin.org": FailedEvaluator()])
-        let manager = SessionManager(trustManager: trustManager)
-        let expect = expectation(description: "request should fail")
-        var requestResult: Result<Data>?
-        
-        // When
-        manager.request("https://httpbin.org/get").response { result in
-            requestResult = result
-            expect.fulfill()
-        }
-        waitForExpectations(timeout: 30, handler: nil)
-        
-        // Then
-        guard let error = requestResult?.error as? AFError, case .certificatePinningFailed = error else {
-            XCTFail()
-            return
-        }
-        
-        XCTAssertTrue(requestResult?.isSuccess == false)
-        XCTAssertNotNil(requestResult?.error)
-    }
-    
-    func testEvaluatorsWork() {
-        // Given
-        let trustManager = ServerTrustManager(evaluators: ["httpbin.org": DefaultTrustEvaluator()])
-        let manager = SessionManager(trustManager: trustManager)
-        let expect = expectation(description: "request should fail")
-        var requestResult: Result<Data>?
-        
-        // When
-        manager.request("https://httpbin.org/get").response { result in
-            requestResult = result
-            expect.fulfill()
-        }
-        waitForExpectations(timeout: 30, handler: nil)
-        
-        // Then
-        XCTAssertTrue(requestResult?.isSuccess == true)
+        XCTAssertTrue(session.configuration.allowsCellularAccess)
     }
     
     func testDownload() {
         // Given
-        let manager = SessionManager()
-        let urlString = "https://httpbin.org/bytes/\(1024 * 1024)"
-        let expect = expectation(description: "download should finish")
-        var requestResult: Result<URL?>?
-        
-        // When
-        manager.download(urlString).response { result in
-            requestResult = result
-            expect.fulfill()
-        }
-        waitForExpectations(timeout: 30, handler: nil)
-        
-        // Then
-        XCTAssertTrue(requestResult?.isSuccess == true)
-    }
-    
-    func testDownloadFailsWithValidation() {
-        // Given
-        let manager = SessionManager()
-        let urlString = "https://httpbin.org/status/404"
-        let expect = expectation(description: "download should finish")
-        var requestResult: Result<URL?>?
-        
-        // When
-        manager.download(urlString).validate(statusCode: 200..<400).response { result in
-            requestResult = result
-            expect.fulfill()
-        }
-        waitForExpectations(timeout: 5, handler: nil)
-        
-        // Then
-        XCTAssertTrue(requestResult?.isFailure == true)
-        guard let error = requestResult?.error as? AFError,
-            error.isResponseValidationError else {
-                XCTFail()
-                return
-        }
-    }
-    
-    func testDataRequestCanBeCancelled() {
-        // Given
+        let request = URLRequest.makeHTTPBinRequest()
         let delegate = SessionDelegate()
-        let manager = SessionManager(delegate: delegate)
-        let urlString = "https://httpbin.org/delay/1"
-        let expect = expectation(description: "request should finish")
-        var requestResult: Result<Data>?
+        let queue = DispatchQueue(label: "aQueue")
+        let opQueue = OperationQueue()
+        opQueue.maxConcurrentOperationCount = 1
+        opQueue.underlyingQueue = queue
+        let didGather = expectation(description: "metrics gathered")
+        let didComplete = expectation(description: "didComplete")
+        delegate.didGatherMetrics = { didGather.fulfill() }
+        delegate.didComplete = { didComplete.fulfill() }
+        let configuration = URLSessionConfiguration.default
+        configuration.httpAdditionalHeaders = ["Header": "Header"]
+        let session = URLSession(configuration: configuration, delegate: delegate, delegateQueue: opQueue)
         
         // When
-        let request = manager.request(urlString).response { result in
-            requestResult = result
-            expect.fulfill()
-        }
+        let task = session.downloadTask(with: request)
+        task.resume()
+        DispatchQueue.main.async { task.cancel(byProducingResumeData: { _ in }) }
         
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-            request.cancel()
-        }
-        
-        waitForExpectations(timeout: 30, handler: nil)
+        wait(for: [didComplete, didGather], timeout: 5)
         
         // Then
-        XCTAssertTrue(requestResult?.isSuccess == false)
-        XCTAssertTrue(delegate.requestTaskMap.isEmpty)
-        guard let error = request.error as? AFError, error.isExplictlyCancelledError else {
-            XCTFail()
-            return
-        }
+        XCTAssertTrue(session.configuration.allowsCellularAccess)
     }
     
-//    func testDataRequestCanBeSuspendedAndResumed() {
-//        // Given
-//        let delegate = SessionDelegate()
-//        let manager = SessionManager(delegate: delegate)
-//        let urlString = "https://httpbin.org/delay/1"
-//        let expect = expectation(description: "request should finish")
-//        var requestResult: Result<Data>?
-//        var capturedState: Request.State?
-//
-//        // When
-//        let request = manager.request(urlString).response { result in
-//            requestResult = result
-//            expect.fulfill()
+//    func testMany() {
+//        for _ in 0..<100 {
+//            testRequestAsyncCancel()
 //        }
-//
-//        DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
-//            request.suspend()
-//        }
-//
-//        DispatchQueue.main.asyncAfter(deadline: .now() + 0.35) {
-//            capturedState = request.state
-//        }
-//
-//        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-//            request.resume()
-//        }
-//
-//        waitForExpectations(timeout: 30, handler: nil)
-//
-//        // Then
-//        XCTAssertTrue(requestResult?.isSuccess == true)
-//        XCTAssertTrue(delegate.requestTaskMap.isEmpty)
-//        XCTAssertTrue(capturedState == .suspended)
 //    }
-    
-    func testUploadRequest() {
-        // Given
-        let url = Bundle(for: URLSessionExplorationTests.self).url(forResource: "imac", withExtension: "jpg")!
-        let imageData = try! Data(contentsOf: url)
-        let manager = SessionManager()
-        let uploadable = Uploadable()
-        let expect = expectation(description: "upload should finish")
-        var requestResult: Result<Data>?
-        
-        // When
-        manager.upload(data: imageData, with: uploadable).response { (result) in
-            requestResult = result
-            expect.fulfill()
-        }
-        
-        waitForExpectations(timeout: 5, handler: nil)
-        
-        // Then
-        XCTAssertTrue(requestResult?.isSuccess == true)
-    }
-    
-    func testUploadFromFileRequest() {
-        // Given
-        let url = Bundle(for: URLSessionExplorationTests.self).url(forResource: "imac", withExtension: "jpg")!
-        let manager = SessionManager()
-        let uploadable = Uploadable()
-        let expect = expectation(description: "upload should finish")
-        var requestResult: Result<Data>?
-        
-        // When
-        manager.upload(file: url, with: uploadable).response { (result) in
-            requestResult = result
-            expect.fulfill()
-        }
-        
-        waitForExpectations(timeout: 5, handler: nil)
-        
-        // Then
-        XCTAssertTrue(requestResult?.isSuccess == true)
-    }
-    
-    func testNonUploadUploadRequest() {
-        // Given
-        let url = Bundle(for: URLSessionExplorationTests.self).url(forResource: "imac", withExtension: "jpg")!
-        let imageData = try! Data(contentsOf: url)
-        let manager = SessionManager()
-        let uploadable = Uploadable(imageData)
-        let expect = expectation(description: "upload should finish")
-        var requestResult: Result<Data>?
-        
-        // When
-        manager.request(uploadable).response { (result) in
-            requestResult = result
-            expect.fulfill()
-        }
-        
-        waitForExpectations(timeout: 5, handler: nil)
-        
-        // Then
-        XCTAssertTrue(requestResult?.isSuccess == true)
-    }
-    
-    func testUploadFromStreamRequest() {
-        // Given
-        let url = Bundle(for: URLSessionExplorationTests.self).url(forResource: "imac", withExtension: "jpg")!
-        let imageData = try! Data(contentsOf: url)
-        let manager = SessionManager()
-        let uploadable = Uploadable(imageData)
-        let expect = expectation(description: "upload should finish")
-        var requestResult: Result<Data>?
-        
-        // When
-        manager.upload(stream: uploadable.stream, with: uploadable).response { (result) in
-            requestResult = result
-            expect.fulfill()
-        }
-        
-        waitForExpectations(timeout: 5, handler: nil)
-        
-        // Then
-        XCTAssertTrue(requestResult?.isSuccess == true)
-    }
-    
-    func testUploadFromManualStreamRequest() {
-        // Given
-        let url = Bundle(for: URLSessionExplorationTests.self).url(forResource: "imac", withExtension: "jpg")!
-        let manager = SessionManager()
-        let uploadable = Uploadable()
-        let stream = InputStream(url: url)!
-        let expect = expectation(description: "upload should finish")
-        var requestResult: Result<Data>?
-        
-        // When
-        manager.upload(stream: stream, with: uploadable).response { (result) in
-            requestResult = result
-            expect.fulfill()
-        }
-        
-        waitForExpectations(timeout: 5, handler: nil)
-        
-        // Then
-        XCTAssertTrue(requestResult?.isSuccess == true)
-    }
-    
-    func testResponseJSON() {
-        // Given
-        let manager = SessionManager()
-        let urlString = "https://httpbin.org/get"
-        let expect = expectation(description: "request should finish")
-        var requestResponse: DataResponse<Any>?
-        
-        // When
-        manager.request(urlString).responseJSON { (response) in
-            requestResponse = response
-            expect.fulfill()
-        }
-        
-        waitForExpectations(timeout: 5, handler: nil)
-        
-        // Then
-        XCTAssertTrue(requestResponse?.result.isSuccess == true)
-        XCTAssertNotNil(requestResponse?.result.value)
-    }
-    
-    func testBasicAuthWithoutAuthenticateFails() {
-        // Given
-        let manager = SessionManager()
-        let urlString = "https://httpbin.org/basic-auth/user/password"
-        let expect = expectation(description: "request should finish")
-        var requestResponse: DataResponse<Any>?
-        
-        // When
-        // Requires validation to fail, as failing Basic Auth returns 401.
-        manager.request(urlString).validate().responseJSON { (response) in
-            requestResponse = response
-            expect.fulfill()
-        }
-        
-        waitForExpectations(timeout: 5, handler: nil)
-        
-        // Then
-        XCTAssertTrue(requestResponse?.result.isSuccess == false)
-        XCTAssertNotNil(requestResponse?.result.error)
-        XCTAssertEqual(requestResponse?.response?.statusCode, 401)
-    }
-    
-    func testBasicAuthWithAuthenticateSucceeds() {
-        // Given
-        let manager = SessionManager()
-        let urlString = "https://httpbin.org/basic-auth/user/password"
-        let expect = expectation(description: "request should finish")
-        var requestResponse: DataResponse<Any>?
-        
-        // When
-        manager.request(urlString).responseJSON { (response) in
-            requestResponse = response
-            expect.fulfill()
-        }.authenticate(withUsername: "user", password: "password")
-        
-        waitForExpectations(timeout: 5, handler: nil)
-        
-        // Then
-        XCTAssertTrue(requestResponse?.result.isSuccess == true)
-        XCTAssertNotNil(requestResponse?.result.value)
-    }
-    
-    func testBasicAuthRejectsWhenAuthenticateIsIncorrect() {
-        // Given
-        let manager = SessionManager()
-        let urlString = "https://httpbin.org/basic-auth/user/password"
-        let expect = expectation(description: "request should finish")
-        var requestResponse: DataResponse<Any>?
-        
-        // When
-        manager.request(urlString).responseJSON { (response) in
-            requestResponse = response
-            expect.fulfill()
-        }.authenticate(withUsername: "user", password: "passwor")
-        
-        waitForExpectations(timeout: 5, handler: nil)
-        
-        // Then
-        XCTAssertTrue(requestResponse?.result.isSuccess == false)
-        XCTAssertNotNil(requestResponse?.result.error)
-        XCTAssertEqual(requestResponse?.response?.statusCode, 401)
-    }
-    
-    func testDigestAuthSucceedsWithAuthenticate() {
-        // Given
-        let manager = SessionManager()
-        let urlString = "https://httpbin.org/digest-auth/auth/user/password"
-        let expect = expectation(description: "request should finish")
-        var requestResponse: DataResponse<Any>?
-        
-        // When
-        manager.request(urlString).responseJSON { (response) in
-            requestResponse = response
-            expect.fulfill()
-        }.authenticate(withUsername: "user", password: "password")
-        
-        waitForExpectations(timeout: 5, handler: nil)
-        
-        // Then
-        XCTAssertTrue(requestResponse?.result.isSuccess == true)
-        XCTAssertNotNil(requestResponse?.result.value)
-    }
-    
-    func testCodeValidatorsWork() {
-        // Give
-        let manager = SessionManager()
-        let urlString = "https://httpbin.org/status/404"
-        let expect = expectation(description: "request should finish")
-        var requestResponse: DataResponse<Any>?
-        
-        // When
-        manager.request(urlString).validate(statusCode: 200..<400).responseJSON { (response) in
-            requestResponse = response
-            expect.fulfill()
-        }
-        
-        waitForExpectations(timeout: 5, handler: nil)
-        
-        // Then
-        XCTAssertTrue(requestResponse?.result.isFailure == true)
-        guard let error = requestResponse?.result.error as? AFError,
-            error.isResponseValidationError else {
-            XCTFail()
-            return
-        }
+}
+
+extension String {
+    static let httpBinURLString = "https://httpbin.org"
+}
+
+extension URL {
+    static func makeHTTPBinURL(path: String = "get") -> URL {
+        let url = URL(string: .httpBinURLString)!
+        return url.appendingPathComponent(path)
     }
 }
 
-struct Uploadable: URLRequestConvertible {
-    let url = URL(string: "https://httpbin.org/anything")!
-    let data: Data?
-    
-    var stream: InputStream {
-        return InputStream(data: data!)
-    }
-    
-    init(_ data: Data? = nil) {
-        self.data = data
-    }
-    
-    func asURLRequest() throws -> URLRequest {
-        var request = URLRequest(url: url)
-        request.httpMethod = "POST"
-        request.httpBody = data
+extension URLRequest {
+    static func makeHTTPBinRequest(path: String = "get",
+                                   method: String = "GET",
+                                   headers: [String: String] = .init(),
+                                   timeout: TimeInterval = 60,
+                                   cachePolicy: URLRequest.CachePolicy = .useProtocolCachePolicy) -> URLRequest {
+        var request = URLRequest(url: .makeHTTPBinURL(path: path))
+        request.httpMethod = method
+        request.allHTTPHeaderFields = headers
+        request.timeoutInterval = timeout
+        request.cachePolicy = cachePolicy
         
         return request
     }
