@@ -21,7 +21,7 @@ final class StressTests: XCTestCase {
 
         // When
         for i in indicies {
-            manager.request(requests[i]).response { (result) in
+            manager.request(requests[i]).response { result in
                 results.append(result)
                 expectations[i].fulfill()
             }
@@ -37,12 +37,12 @@ final class StressTests: XCTestCase {
 
 struct Requestable: URLRequestConvertible {
     let number: Int
-    
+
     func asURLRequest() throws -> URLRequest {
         let url = URL(string: "https://httpbin.org/anything/\(number)")!
         var request = URLRequest(url: url)
         request.httpMethod = "GET"
-        
+
         return request
     }
 }
